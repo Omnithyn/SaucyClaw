@@ -1,0 +1,36 @@
+project: "SaucyClaw"
+current_cycle: "v1.2"
+last_updated: "2026-03-16"
+
+focus:
+  - "完成 OpenClaw 兼容化"
+  - "将角色主设定重心迁移到 AGENTS.md"
+  - "补回 Clawith-lite 轻量增强元素"
+  - "保持治理层与增强模板层稳定"
+
+active_items:
+  - id: A001
+    title: "为所有角色补齐 AGENTS.md"
+    owner: "general-manager"
+    priority: "high"
+    status: "active"
+
+  - id: A002
+    title: "补回 focus 全套文件"
+    owner: "general-manager"
+    priority: "high"
+    status: "active"
+
+  - id: A003
+    title: "补充 v1.2 升级文档"
+    owner: "writer"
+    priority: "medium"
+    status: "active"
+
+next_up:
+  - "准备一个严格按 AGENTS.md 运行的最小示例"
+  - "验证 OpenClaw 复制使用时是否优先读取 AGENTS.md"
+
+risks:
+  - "若用户只复制 PROMPT.md 而忽略 AGENTS.md，会偏离 OpenClaw 实际习惯"
+  - "若 focus 不被持续维护，容易退化为静态文档"

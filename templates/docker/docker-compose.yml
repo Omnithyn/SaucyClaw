@@ -1,0 +1,7 @@
+services:
+  saucyclaw-template:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    tty: true
+    stdin_open: true

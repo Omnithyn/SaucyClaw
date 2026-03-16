@@ -1,0 +1,28 @@
+# SaucyClaw
+node_modules/
+dist/
+*.zip
+build/
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+*.db
+.DS_Store
+
+# Runtime agent data
+CLAUDE.md
+.claude/
+openspec/
+.opencode/
+.data/
+
+# Ignore Antigravity / Claude Code agent configurations
+.agent/
+.agents/
+_agent/
+_agents/

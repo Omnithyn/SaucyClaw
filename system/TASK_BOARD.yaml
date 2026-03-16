@@ -1,0 +1,33 @@
+project: "SaucyClaw"
+last_updated: "2026-03-16"
+
+tasks:
+  - id: T001
+    title: "建立 SaucyClaw 项目目录"
+    owner: "general-manager"
+    status: "done"
+    priority: "high"
+
+  - id: T002
+    title: "定义系统总规与角色边界"
+    owner: "general-manager"
+    status: "done"
+    priority: "high"
+
+  - id: T003
+    title: "定义 General Manager 长期设定"
+    owner: "general-manager"
+    status: "done"
+    priority: "high"
+
+  - id: T004
+    title: "定义 specialist 默认待命设定"
+    owner: "general-manager"
+    status: "done"
+    priority: "high"
+
+  - id: T005
+    title: "准备示例任务包"
+    owner: "writer"
+    status: "todo"
+    priority: "medium"

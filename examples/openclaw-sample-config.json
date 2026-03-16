@@ -1,0 +1,33 @@
+{
+  "project": "SaucyClaw",
+  "organization": {
+    "ceo": "姚总",
+    "general_manager": "虾酱"
+  },
+  "agents": {
+    "ceo": {
+      "path": "agents/ceo"
+    },
+    "general_manager": {
+      "path": "agents/general-manager"
+    },
+    "reviewer": {
+      "path": "agents/reviewer"
+    },
+    "specialists": {
+      "researcher": "agents/specialists/researcher",
+      "architect": "agents/specialists/architect",
+      "developer": "agents/specialists/developer",
+      "writer": "agents/specialists/writer",
+      "designer": "agents/specialists/designer"
+    }
+  },
+  "system": {
+    "spec": "system/SYSTEM_SPEC.md",
+    "agents": "system/AGENTS.md",
+    "orchestration": "system/ORCHESTRATION.md",
+    "routing": "system/MESSAGE_ROUTING.md",
+    "triggers": "system/TRIGGERS.md",
+    "standards": "system/STANDARDS.md"
+  }
+}
