@@ -1,0 +1,69 @@
+#!/bin/bash
+# pre-push hook: 推送前检查
+
+REMOTE="$1"
+BRANCH="$2"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${YELLOW}===================================${NC}"
+echo -e "${YELLOW}🦞 Pre-push 检查${NC}"
+echo -e "${YELLOW}===================================${NC}"
+
+# 检查是否尝试推送到 main
+if [ "$BRANCH" = "main" ]; then
+    echo -e "${RED}❌ 禁止直接推送到 main 分支！${NC}"
+    echo ""
+    echo "请使用以下流程："
+    echo "  1. 创建开发分支: git checkout -b feat/your-feature"
+    echo "  2. 推送到开发分支: git push origin feat/your-feature"
+    echo "  3. 创建 Pull Request"
+    echo "  4. Code Review 后合并到 main"
+    echo ""
+    echo "详细文档: docs/08-github-workflow.md"
+    exit 1
+fi
+
+# 检查分支命名规范
+echo -n "• 检查分支命名... "
+if echo "$BRANCH" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf)/"; then
+    echo -e "${GREEN}✅ 分支命名规范 (类型/描述)${NC}"
+elif [ "$BRANCH" = "develop" ] || echo "$BRANCH" | grep -q "^release/"; then
+    echo -e "${GREEN}✅ 分支命名规范 (保留分支)${NC}"
+else
+    echo -e "${YELLOW}⚠️  警告：分支命名不规范${NC}"
+    echo -e "${YELLOW}建议格式: feat/description, fix/description 等${NC}"
+fi
+
+# 如果有测试脚本，运行快速测试
+if [ -f "scripts/validate/run-tests.sh" ]; then
+    echo ""
+    echo -e "${YELLOW}• 运行快速测试...${NC}"
+    if scripts/validate/run-tests.sh --quick; then
+        echo -e "${GREEN}✅ 测试通过${NC}"
+    else
+        echo -e "${RED}❌ 测试失败${NC}"
+        echo -e "${YELLOW}提示：修复测试后再推送${NC}"
+        exit 1
+    fi
+fi
+
+# 检查是否有敏感信息
+echo -n "• 检查敏感信息... "
+if git diff --cached | grep -qE "(api_key|password|secret|token)[[:space:]]*="; then
+    echo -e "${RED}❌ 发现敏感信息！${NC}"
+    echo -e "${RED}警告：不要提交包含敏感信息的代码${NC}"
+    exit 1
+else
+    echo -e "${GREEN}✅ 未发现敏感信息${NC}"
+fi
+
+echo ""
+echo -e "${GREEN}===================================${NC}"
+echo -e "${GREEN}✅ 推送检查通过！${NC}"
+echo -e "${GREEN}===================================${NC}"
+
+exit 0

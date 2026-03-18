@@ -1,0 +1,66 @@
+# 代码所有者
+
+本文件定义了不同代码区域的审查责任人。
+
+## 格式说明
+
+```
+路径/模式 @用户名 或 @组织/团队
+```
+
+- `*` 匹配任意文件
+- `docs/` 匹配 docs 目录下的所有文件
+
+## 代码所有者配置
+
+```text
+# 全局默认（所有文件都需要以下人员审查）
+* @Omnithyn
+
+# 系统治理核心
+system/ @Omnithyn
+
+# 智能体角色定义
+agents/ @Omnithyn
+
+# 文档
+docs/ @Omnithyn
+
+# 脚本
+scripts/ @Omnithyn
+
+# Python 工具
+tools/saucyclaw/ @Omnithyn
+
+# Docker 配置
+templates/docker/ @Omnithyn
+
+# 示例
+examples/ @Omnithyn
+
+# 公共信息流
+plaza/ @Omnithyn
+
+# 角色关注面
+focus/ @Omnithyn
+```
+
+## 审查要求
+
+- 所有 Pull Request 必须获得至少 1 名代码所有者的批准
+- 修改核心系统文件（system/, agents/）建议获得 2 名审查人批准
+- 文档更新（docs/）至少 1 人批准
+
+## 例外情况
+
+在紧急情况下，可以通过以下方式临时绕过审查：
+
+1. 使用 `@Omnithyn` 直接沟通
+2. 在 PR 描述中说明紧急原因
+3. 合并后立即补充完整测试和文档
+
+**注意**：紧急合并应尽量避免，仅在严重影响项目运行时使用。
+
+---
+
+**最后更新**: 2026-03-18

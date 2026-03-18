@@ -1,0 +1,65 @@
+#!/bin/bash
+# commit-msg hook: 验证提交信息格式
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${YELLOW}===================================${NC}"
+echo -e "${YELLOW}🦞 Commit Message 格式检查${NC}"
+echo -e "${YELLOW}===================================${NC}"
+
+# 跳过 Merge 和 Revert 提交
+if echo "$COMMIT_MSG" | grep -qE "^Merge|^Revert"; then
+    echo -e "${YELLOW}⚠️  跳过检查 (Merge/Revert 提交)${NC}"
+    exit 0
+fi
+
+# 提取第一行（标题行）
+TITLE=$(echo "$COMMIT_MSG" | head -n 1)
+
+# 检查是否为空
+if [ -z "$TITLE" ] || [ "$TITLE" = "$(printf '\n')" ]; then
+    echo -e "${RED}❌ 错误：提交信息不能为空${NC}"
+    exit 1
+fi
+
+# 检查长度（建议不超过 72 个字符）
+TITLE_LENGTH=${#TITLE}
+if [ $TITLE_LENGTH -gt 72 ]; then
+    echo -e "${RED}❌ 标题行过长 (${TITLE_LENGTH}/72 个字符)${NC}"
+    echo -e "${YELLOW}提示：标题行建议不超过 72 个字符${NC}"
+    exit 1
+fi
+
+# 检查是否以类型开头 (feat|fix|docs|style|refactor|test|chore|perf|revert)
+if ! echo "$TITLE" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|revert)(\(.+\))?: [A-Za-z0-9]"; then
+    echo -e "${RED}❌ 提交信息格式不符合规范${NC}"
+    echo ""
+    echo "正确格式："
+    echo "  type(scope): description"
+    echo ""
+    echo "示例："
+    echo "  feat(agent): add create_agent_role script"
+    echo "  fix(lint): resolve trailing whitespace issue"
+    echo "  docs(readme): update installation guide"
+    echo ""
+    echo "可用类型："
+    echo "  • feat   - 新功能"
+    echo "  • fix    - Bug 修复"
+    echo "  • docs   - 文档更新"
+    echo "  • style  - 代码格式调整"
+    echo "  • refactor - 代码重构"
+    echo "  • test   - 测试相关"
+    echo "  • chore  - 构建、依赖等"
+    echo "  • perf   - 性能优化"
+    echo ""
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Commit message 格式正确！${NC}"
+exit 0
