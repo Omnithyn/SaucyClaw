@@ -1,0 +1,33 @@
+name: PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate-pr:
+    name: Validate PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check PR title format
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|test|chore|perf|revert)(\(.+\))?: ]]; then
+            echo "❌ PR title format is invalid"
+            echo "Expected format: type(scope): description"
+            echo "Example: feat(agent): add create agent script"
+            exit 1
+          fi
+          echo "✅ PR title format is valid"
+
+      - name: Check for WIP
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          if [[ "$PR_TITLE" =~ (WIP|wip|work in progress) ]]; then
+            echo "⚠️  This PR is marked as WIP"
+            exit 0
+          fi
+          echo "✅ PR is ready for review"
