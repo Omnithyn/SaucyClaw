@@ -1,7 +1,34 @@
+version: '3.8'
+
 services:
-  saucyclaw-template:
+  saucyclaw:
     build:
-      context: .
-      dockerfile: Dockerfile
-    tty: true
+      context: ../..
+      dockerfile: templates/docker/Dockerfile
+    container_name: saucyclaw-agent
+    volumes:
+      # Mount project directory
+      - ../..:/workspace
+      # Mount data directory for persistence
+      - saucyclaw_data:/workspace/.data
+      # Mount plaza for shared information
+      - saucyclaw_plaza:/workspace/plaza
+    environment:
+      # Claude API configuration
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-https://api.anthropic.com}
+      # Project settings
+      - PROJECT_NAME=${PROJECT_NAME:-SaucyClaw}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    ports:
+      # Expose port if needed for web interface
+      - "8080:8080"
     stdin_open: true
+    tty: true
+    working_dir: /workspace
+
+volumes:
+  saucyclaw_data:
+    name: saucyclaw_data
+  saucyclaw_plaza:
+    name: saucyclaw_plaza
