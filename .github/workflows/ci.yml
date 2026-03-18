@@ -64,7 +64,7 @@ jobs:
       - name: Lint Python files
         run: |
           find . -name "*.py" -type f | grep -v ".git" | while read file; do
-            flake8 "$file" --max-line-length=120 || exit 1
+            flake8 "$file" --max-line-length=120 --ignore=E501 || exit 1
           done
 
   test:

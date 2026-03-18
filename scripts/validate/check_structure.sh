@@ -208,7 +208,9 @@ echo ""
 echo "==================================="
 echo -e "${BLUE}📊 检查总结${NC}"
 echo "==================================="
-echo -e "✅ ${GREEN}通过: $((REQUIRED_DIRS + SYSTEM_FILES + 1))${NC}"
+REQUIRED_DIRS_COUNT=${#REQUIRED_DIRS[@]}
+SYSTEM_FILES_COUNT=${#SYSTEM_FILES[@]}
+echo -e "✅ ${GREEN}通过: $((REQUIRED_DIRS_COUNT + SYSTEM_FILES_COUNT + 1))${NC}"
 echo -e "⚠️  ${YELLOW}警告: $WARNINGS${NC}"
 echo -e "❌ ${RED}错误: $ERRORS${NC}"
 echo ""

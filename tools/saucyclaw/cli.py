@@ -8,17 +8,13 @@ import sys
 import os
 import argparse
 from pathlib import Path
-from typing import Optional
-
-# 添加 tools 目录到 Python 路径
-TOOLS_DIR = Path(__file__).parent
-sys.path.insert(0, str(TOOLS_DIR.parent))
 
 from saucyclaw import __version__
 
 
 def init_project(args):
     """初始化 SaucyClaw 项目"""
+    TOOLS_DIR = Path(__file__).parent
     project_name = args.name
     print(f"正在初始化项目: {project_name}")
     # 调用脚本
@@ -31,6 +27,7 @@ def init_project(args):
 
 def validate_structure(args):
     """验证项目结构"""
+    TOOLS_DIR = Path(__file__).parent
     print("正在验证项目结构...")
     script_path = TOOLS_DIR.parent / "scripts" / "validate" / "check_structure.sh"
     if script_path.exists():
@@ -41,6 +38,7 @@ def validate_structure(args):
 
 def create_agent(args):
     """创建新的智能体角色"""
+    TOOLS_DIR = Path(__file__).parent
     agent_name = args.name
     agent_type = args.type
     print(f"正在创建智能体: {agent_name} (type: {agent_type})")
@@ -53,6 +51,7 @@ def create_agent(args):
 
 def start_demo(args):
     """启动 Docker demo 环境"""
+    TOOLS_DIR = Path(__file__).parent
     print("正在启动 Docker demo...")
     script_path = TOOLS_DIR.parent / "scripts" / "demo" / "up_demo.sh"
     if script_path.exists():
@@ -63,6 +62,7 @@ def start_demo(args):
 
 def stop_demo(args):
     """停止 Docker demo 环境"""
+    TOOLS_DIR = Path(__file__).parent
     print("正在停止 Docker demo...")
     script_path = TOOLS_DIR.parent / "scripts" / "demo" / "down_demo.sh"
     if script_path.exists():
