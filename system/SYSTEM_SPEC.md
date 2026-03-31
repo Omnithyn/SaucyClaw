@@ -17,6 +17,18 @@
 - `templates/`
 - `examples/`
 
+## 一点五、版本生效机制（Version Activation）
+
+为避免 V1 / V2 并存造成执行分叉，SaucyClaw 采用如下规则：
+
+1. 当前默认生效版本：`SYSTEM_SPEC.md`（本文件，V1 主规）
+2. `*_V2.md` 文件当前为草案与迁移参考，不自动覆盖 V1
+3. 仅当以下条件满足时，V2 才可升级为默认生效：
+   - `SYSTEM_SPEC_V2.md` 补齐退出草案条件
+   - `ORCHESTRATION_V2.md` 与 `STANDARDS_V2.md` 补齐差异对照与迁移说明
+   - README / CLAUDE / 关键角色入口完成口径收敛
+4. 若执行中发现两套规范冲突，按“V1 生效、V2 参考”处理，并记录待迁移项
+
 ## 二、系统定位
 
 SaucyClaw 是一个 **agent hardness engineering 基线工程**。
