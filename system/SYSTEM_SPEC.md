@@ -2,57 +2,71 @@
 
 ## 一、地位
 
-本文件是 SaucyClaw 的最高规范文件。  
+本文件是 SaucyClaw 的系统级主规范文件。  
 当其他治理文件与本文件冲突时，以本文件为准。
 
 适用范围包括：
 - `system/AGENTS.md`
-- `system/HUMAN_ROLES.md`
+- `system/HARDNESS_ENGINEERING.md`
 - `system/ORCHESTRATION.md`
-- `system/MESSAGE_ROUTING.md`
-- `system/TRIGGERS.md`
 - `system/STANDARDS.md`
+- `system/EVALUATION.md`
+- `system/FAILURE_MODES.md`
 - 各角色目录中的 `AGENTS.md / soul.md / memory.md / PROMPT.md`
-- `focus/`
-- `plaza/`
+- `evals/`
 - `templates/`
 - `examples/`
 
-## 二、系统目标
+## 二、系统定位
 
-SaucyClaw 的目标不是让更多 agent 一起工作，而是：
+SaucyClaw 是一个 **agent hardness engineering 基线工程**。
 
-1. 让 OpenClaw 多智能体组织有可复制的治理样例
-2. 让 General Manager 先判断任务是否需要调动团队
-3. 让 specialist 不再根据用户原始需求直接抢答
-4. 让复杂任务有 owner、handoff、review、收口
-5. 让长期行为写入文件设定，而不是靠上下文记忆
-6. 让项目结构更贴近 OpenClaw 实际使用方式
-7. 明确区分外部人类角色与内部智能体角色
+它的目标不是简单地让更多 agent 一起工作，而是构建一套：
 
-## 三、最高原则
+1. 强大且受约束的 agent 团队
+2. 角色边界清晰的协作机制
+3. 可评测、可回放、可回归的团队工程能力
+4. 可映射到不同 agent 工具链的治理与方法底座
 
-1. 先判断任务处理模式，再决定是否执行或调度
-2. 多智能体不是默认动作，而是升级动作
-3. 能单人闭环就不多人协作
-4. 能单 specialist 闭环就不升级为多角色
-5. 未被点名不得启动
-6. 单任务单 owner
-7. handoff 必须留痕
-8. review 是正式关卡
-9. General Manager 统一收口
-10. 长期有效行为必须写入文件设定
-11. 对 OpenClaw 来说，内部角色主设定以 `AGENTS.md` 为准
-12. CEO 在本项目中是外部人类角色，不作为 agent 存在
+OpenClaw 是重要兼容目标，但不是唯一宿主。
+
+## 三、系统目标
+
+SaucyClaw 的系统目标包括：
+
+1. 让 General Manager 保持先判断后调度
+2. 让 specialist 协作而不抢答、不越界
+3. 让 reviewer、evaluator、policy guardian 各司其职
+4. 让 handoff、review、task contract 成为正式机制
+5. 让评测与回归成为团队工程的一部分
+6. 让方法优先于工具而沉淀下来
 
 ## 四、组织模型
 
-姚总（CEO，人类/外部角色）
--> 虾酱（General Manager，主智能体）
--> Specialist
--> Reviewer
+外部角色：
+- CEO / Human Decision Maker
 
-## 五、任务处理模式
+内部角色：
+- General Manager
+- Specialists
+- Reviewer
+- Evaluator
+- Policy Guardian
+
+## 五、最高原则
+
+1. 先判断任务处理模式，再决定是否执行或调度
+2. 多角色协作不是默认动作，而是升级动作
+3. 单任务单 owner
+4. 未被点名不得启动
+5. 关键流转必须留痕
+6. review 是正式关卡，且不代写
+7. evaluation 是正式能力，且不替代交付
+8. policy check 是正式能力，且不替代总控
+9. 长期有效行为必须文件化
+10. 方法优先，工具其次
+
+## 六、任务处理模式
 
 ### A 类：General Manager 自己直接完成
 ### B 类：单 specialist
@@ -62,27 +76,39 @@ SaucyClaw 的目标不是让更多 agent 一起工作，而是：
 
 General Manager 必须先判断属于哪一类，再决定下一步。
 
-## 六、角色文件分层
+## 七、系统层结构
 
-### 1. AGENTS.md
-角色主设定文件。  
-定义默认行为、启动条件、工作方式、边界、禁止事项。  
-在 OpenClaw 兼容设计中，这是优先级最高的角色文件。
+### 1. Team Layer
+定义角色与协作关系：
+- General Manager
+- Specialists
+- Reviewer
+- Evaluator
+- Policy Guardian
 
-### 2. PROMPT.md
-辅助说明文件。  
-可保留用于阅读、展示或迁移，但不应作为唯一关键设定文件。
+### 2. Constraint Layer
+定义边界、纪律与关键检查点：
+- 角色边界
+- 启动条件
+- handoff 纪律
+- review 关卡
+- 关键动作检查点
 
-### 3. soul.md
-定义角色本质、核心信条、长期边界。
+### 3. Evaluation Layer
+定义评测与回归工作面：
+- smoke tasks
+- replay scenarios
+- rubrics
+- reports
 
-### 4. memory.md
-定义长期经验、偏好、常见错误与提醒。
+### 4. Portability Layer
+定义跨工具映射与入口适配：
+- OpenClaw
+- Codex
+- Claude
+- 其他 agent 工作方式
 
-### 5. focus/*.md
-定义当前阶段的关注面与易错点。
-
-## 七、授权边界
+## 八、授权边界
 
 ### General Manager 可直接决定：
 - A 类任务直接执行
@@ -91,26 +117,12 @@ General Manager 必须先判断属于哪一类，再决定下一步。
 - D 类任务在目标明确时启动第一阶段
 - E 类任务先整理缺口
 
-### 必须升级给 CEO（人类角色）的情况：
+### 必须升级给外部决策角色的情况：
 - 目标不清
 - 原任务边界发生重大变化
 - 范围冲突
-- 重大取舍影响整体方向
+- 关键取舍影响整体方向
 - 是否继续推进存在明显分歧
-
-## 八、运行增强元素
-
-### focus
-定义各角色当前阶段的关注面。
-
-### agenda
-定义当前周期的重点、风险与 next up。
-
-### triggers
-定义任务创建、点名 owner、handoff、review、决策更新等轻量触发机制。
-
-### plaza
-用于沉淀组织级公告、发现与更新。
 
 ## 九、质量红线
 
@@ -118,10 +130,11 @@ General Manager 必须先判断属于哪一类，再决定下一步。
 
 1. General Manager 未先做任务处理判断
 2. specialist 未被点名自行启动
-3. 多 specialist 根据原始需求同时开工
+3. 多个 owner 同时直接背责同一阶段
 4. 没有 handoff 就进入下一阶段
-5. 没有 review 就 done
+5. 没有 review 就直接标记完成
 6. reviewer 直接重写主体成果
-7. General Manager 不统一收口
-8. 关键内部角色只写 PROMPT 而没有 AGENTS.md
-9. 将 CEO 误建成内部 agent
+7. evaluator 代替交付角色生成业务成果
+8. policy guardian 代替总控进行完整调度
+9. 将外部人类角色误建成内部 agent
+10. 团队变更没有评测或回归意识
