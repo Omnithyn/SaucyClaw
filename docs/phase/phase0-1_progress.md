@@ -86,14 +86,14 @@
 
 ## Commit 4 — file stores + engine
 
-状态：未开始
+状态：已完成
 
 ### 完成内容
-- [ ] Protocol 抽象
-- [ ] FileEvidenceStore
-- [ ] FileMemoryStore
-- [ ] Engine 编排
-- [ ] 单元测试
+- [x] Protocol 抽象
+- [x] FileEvidenceStore (JSONL, 按 session_id 分文件)
+- [x] FileMemoryStore (JSON, 单记录单文件)
+- [x] Engine 编排
+- [x] 单元测试（22 tests, 新增模块 95%+ 覆盖）
 
 ### 未完成
 - 无
