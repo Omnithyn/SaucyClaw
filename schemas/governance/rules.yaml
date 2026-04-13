@@ -1,7 +1,9 @@
 # 治理本体：规则定义
-# 来源：system/ORCHESTRATION.md 中 C 类任务的审查规则
+# Phase 0-1: 最小规则集（仅 rule-reviewer-must-differ）
+# Phase 1.2: 扩展为 5 条规则，覆盖角色分离、handoff、路由、升级
 
 rules:
+  # 角色分离类
   - id: "rule-reviewer-must-differ"
     task_type: "C"
     description: "审查者不能与执行者相同"
@@ -11,3 +13,51 @@ rules:
         value_from: "reviewer"
     severity: "block"
     on_hit: "Block"
+
+  # 角色分离类：specialist 不能直接输出给 CEO
+  # 合规检查：direct_output 必须为 "false"（输出需经 review）
+  - id: "rule-specialist-not-direct-output"
+    task_type: "C"
+    description: "specialist 不得直接输出最终答案给 CEO"
+    conditions:
+      - field: "direct_output"
+        op: "=="
+        value: "false"
+    severity: "block"
+    on_hit: "Block"
+
+  # 任务分流类：D 类任务必须有 handoff 记录才能进入 review
+  # 合规检查：handoff 必须为 "true"
+  - id: "rule-handoff-required"
+    task_type: "D"
+    description: "多阶段任务进入 review 前必须有 handoff 记录"
+    conditions:
+      - field: "handoff"
+        op: "=="
+        value: "true"
+    severity: "block"
+    on_hit: "Block"
+
+  # 消息路由类：A 类任务只能由 manager 或 orchestrator 处理
+  # 合规检查：assignee 必须在允许的角色列表中
+  - id: "rule-restricted-routing"
+    task_type: "A"
+    description: "A 类任务只能由 manager 或 orchestrator 处理"
+    conditions:
+      - field: "assignee"
+        op: "in"
+        value: ["manager", "orchestrator"]
+    severity: "block"
+    on_hit: "Block"
+
+  # 升级触发类：冲突方向时必须升级
+  # 合规检查：conflict 必须为 "false"（无冲突）
+  - id: "rule-escalate-on-conflict"
+    task_type: "C"
+    description: "方向、范围或输入不足冲突时必须升级"
+    conditions:
+      - field: "conflict"
+        op: "=="
+        value: "false"
+    severity: "block"
+    on_hit: "Escalate"

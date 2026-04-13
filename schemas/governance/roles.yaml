@@ -1,5 +1,6 @@
 # 治理本体：角色定义
 # 来源：agents/ 目录中的角色定义 + system/ORCHESTRATION.md
+# Phase 1.2 扩展：新增 specialist、manager、orchestrator，保留 developer
 
 roles:
   - id: "developer"
@@ -13,6 +14,20 @@ roles:
     handoff_to:
       - "reviewer"
 
+  - id: "specialist"
+    name: "专家角色（抽象）"
+    description: "通用 specialist，不直接对外输出"
+    capabilities:
+      - "domain_expertise"
+      - "analysis"
+    permissions:
+      can_modify_files: true
+      can_approve_output: false
+      can_output_to_ceo: false
+    handoff_to:
+      - "reviewer"
+      - "manager"
+
   - id: "reviewer"
     name: "审查角色"
     capabilities:
@@ -23,3 +38,34 @@ roles:
       can_approve_output: true
     handoff_to:
       - "developer"
+      - "manager"
+
+  - id: "manager"
+    name: "管理角色"
+    description: "负责 handoff 判断、阶段决策和 specialist 点名"
+    capabilities:
+      - "task_dispatch"
+      - "phase_decision"
+      - "handoff_approval"
+    permissions:
+      can_modify_files: false
+      can_approve_output: true
+      can_dispatch_specialist: true
+    handoff_to:
+      - "specialist"
+      - "reviewer"
+
+  - id: "orchestrator"
+    name: "编排角色"
+    description: "负责消息路由和流程控制"
+    capabilities:
+      - "routing"
+      - "escalation"
+      - "flow_control"
+    permissions:
+      can_modify_files: false
+      can_approve_output: false
+      can_escalate: true
+    handoff_to:
+      - "manager"
+      - "specialist"
