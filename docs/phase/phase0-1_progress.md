@@ -105,11 +105,11 @@
 
 ## Commit 5 — openclaw adapter + integration test
 
-状态：未开始
+状态：已完成
 
 ### 完成内容
-- [ ] OpenClawHostAdapter
-- [ ] 集成测试（Block + Allow）
+- [x] OpenClawHostAdapter (mock)
+- [x] 集成测试（Block + Allow，使用真实 YAML 规则）
 
 ### 未完成
 - 无
