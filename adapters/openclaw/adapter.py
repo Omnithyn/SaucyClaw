@@ -11,7 +11,6 @@ from datetime import datetime, timezone
 
 from stores.protocols import (
     GateResult,
-    HostAdapter,
     NormalizedEvent,
     SessionContext,
 )

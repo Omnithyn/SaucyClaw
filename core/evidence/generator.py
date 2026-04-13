@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 
 from core.governance.models import GovernanceRule
 from stores.protocols import Evidence, NormalizedEvent

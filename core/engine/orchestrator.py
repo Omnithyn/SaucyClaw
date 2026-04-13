@@ -6,7 +6,6 @@ from stores.protocols import (
     Evidence,
     EvidenceStore,
     GateResult,
-    MemoryRecord,
     MemoryStore,
     NormalizedEvent,
 )
