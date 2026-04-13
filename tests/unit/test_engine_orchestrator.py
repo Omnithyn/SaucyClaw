@@ -8,7 +8,6 @@ from core.engine.orchestrator import GovernanceEngine
 from core.governance.models import Condition, GovernanceRule
 from stores.file.evidence.store import FileEvidenceStore
 from stores.file.memory.store import FileMemoryStore
-from stores.protocols import GateResult
 
 
 # ---------------------------------------------------------------------------
