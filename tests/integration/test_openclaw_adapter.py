@@ -71,8 +71,6 @@ class TestBlockScenarioIntegration:
             fixture = yaml.safe_load(f)
 
         adapter = OpenClawHostAdapter()
-        session = adapter.connect({"session_id": fixture["session_id"]})
-        event = adapter.collect_event(fixture)
 
         # 引擎处理
         result = engine.process_event(fixture)
