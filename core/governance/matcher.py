@@ -78,9 +78,12 @@ def evaluate_rule(rule: GovernanceRule, input_data: dict) -> bool:
 def match_rules(
     rules: list[GovernanceRule], input_data: dict
 ) -> list[GovernanceRule]:
-    """从规则列表中找出所有触发（条件不满足 = 违规）的规则。
+    """返回所有**违规触发**的规则（条件不满足 = 违规）。
 
-    evaluate_rule 返回 True = 条件通过（无违规），
-    match_rules 关心的是返回 False 的规则（有违规，需要执行 on_hit 动作）。
+    注意：evaluate_rule 返回 True 表示条件通过（无违规），
+    此函数返回的是 evaluate_rule 为 False 的规则（有违规）。
+    即：返回需要执行 on_hit 动作的规则列表。
+
+    如需"条件通过的规则"，应直接调用 evaluate_rule。
     """
     return [rule for rule in rules if not evaluate_rule(rule, input_data)]

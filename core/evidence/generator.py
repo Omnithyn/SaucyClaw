@@ -62,7 +62,7 @@ class EvidenceGenerator:
             source_ref=event.id,
             timestamp=event.timestamp,
             confidence=confidence,
-            governance_version=rule.task_type,
+            governance_version=None,  # 由上层治理版本号注入，Phase 0-1 暂空
             applicable_scope={"session_id": event.session_id},
         )
 

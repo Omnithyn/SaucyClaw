@@ -77,7 +77,7 @@ class TestEvidenceGenerator:
         assert evidence.source_ref == event.id
         assert rule.id in evidence.assertion
         assert evidence.applicable_scope == {"session_id": event.session_id}
-        assert evidence.governance_version == "C"
+        assert evidence.governance_version is None
 
     def test_review_evidence(self):
         rule = _make_review_rule()

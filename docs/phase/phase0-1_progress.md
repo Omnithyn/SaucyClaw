@@ -112,7 +112,41 @@
 - [x] 集成测试（Block + Allow，使用真实 YAML 规则）
 
 ### 未完成
-- 无
+- MemoryStore 未接入 GovernanceEngine（仅构造实例，不写入）
+
+### 风险/偏差
+- 无（OQ-001/002/004 已决，见 ADR-0004）
+
+---
+
+## Commit 5 — openclaw adapter + integration test
+
+状态：已完成
+
+### 完成内容
+- [x] OpenClawHostAdapter (mock)
+- [x] 集成测试（Block + Allow，使用真实 YAML 规则）
+
+### 未完成
+- OpenClawHostAdapter.intercept_output 仅为占位实现，真实 hook 尚未接入
 
 ### 风险/偏差
 - 无（OQ-003 已决，见 ADR-0004）
+
+---
+
+## Phase 0-1 实施口径说明（PR 评审后补充）
+
+> 以下条目来自 PR #8 评审，用于锁定"代码真相"与文档的一致点。
+
+### Memory 状态
+- **已完成**：MemoryStore 接口 + FileMemoryStore 默认实现
+- **未完成**：治理流程中的记忆沉淀接入（Phase 1.1 补入）
+
+### Allow 证据策略
+- Allow 场景（无规则触发）**不生成 evidence**
+- 只有规则触发（违规）时才生成 Evidence 记录
+
+### 语义修正
+- `Evidence.governance_version` 在 Phase 0-1 固定为 `None`，留待上层注入
+- `match_rules()` 返回的是**违规触发**的规则列表（条件不满足 = 违规），非"条件匹配"的规则
