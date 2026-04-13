@@ -150,6 +150,8 @@ SaucyClaw/
 7. `evals/README.md`
 8. `templates/`
 
+> 语义裁决说明：若入口文件表达存在差异，以 `system/SYSTEM_SPEC.md` 为准。
+
 ---
 
 ## Use Cases
