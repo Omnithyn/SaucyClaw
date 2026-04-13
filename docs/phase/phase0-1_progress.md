@@ -52,12 +52,12 @@
 
 ## Commit 2 — meta_model + governance 最小闭环
 
-状态：未开始
+状态：已完成
 
 ### 完成内容
-- [ ] meta_model dataclass + loader + validator
-- [ ] governance dataclass + matcher
-- [ ] 单元测试
+- [x] meta_model dataclass + loader + validator
+- [x] governance dataclass + matcher
+- [x] 单元测试（27 tests, 98% coverage）
 
 ### 未完成
 - 无
