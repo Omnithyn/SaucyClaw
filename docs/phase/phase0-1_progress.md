@@ -224,3 +224,28 @@
 
 ### 风险/偏差
 - 无
+
+---
+
+## Phase 1.4 — 治理规则 YAML 装载统一化
+
+状态：已完成
+
+### 完成内容
+- [x] `core/governance/loader.py` — 正式治理 schema 装载器，暴露：
+  - `load_rules(path)` — 解析 rules.yaml（含 applies_when）
+  - `load_roles(path)` — 解析 roles.yaml
+  - `load_task_types(path)` — 解析 task_types.yaml
+  - `load_governance(dir)` — 批量加载，返回 GovernanceSchema
+  - `SchemaError` — 最小校验错误类型
+- [x] `tests/integration/test_openclaw_adapter.py` — 移除手工 `_load_rules()`，改用正式 `load_rules()`
+- [x] `tests/unit/test_governance_loader.py` — 14 个测试（真实 YAML / 错误处理 / 解析完整性）
+- [x] 116 tests 全部通过，pyflakes 零报错
+
+### 设计原则
+- 最小校验：仅检查必填字段和基础类型
+- 不存在文件不报错，返回空列表
+- 不做复杂 schema 验证框架
+
+### 风险/偏差
+- 无

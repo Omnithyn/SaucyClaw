@@ -11,7 +11,8 @@ import yaml
 
 from adapters.openclaw.adapter import OpenClawHostAdapter
 from core.engine.orchestrator import GovernanceEngine
-from core.governance.models import Condition, GovernanceRule
+from core.governance.loader import load_rules
+from core.governance.models import GovernanceRule
 from stores.file.evidence.store import FileEvidenceStore
 from stores.file.memory.store import FileMemoryStore
 
@@ -22,29 +23,6 @@ from stores.file.memory.store import FileMemoryStore
 
 SCHEMAS_DIR = Path(__file__).parent.parent.parent / "schemas" / "governance"
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
-
-
-def _load_rules() -> list[GovernanceRule]:
-    rules_path = SCHEMAS_DIR / "rules.yaml"
-    with open(rules_path) as f:
-        data = yaml.safe_load(f)
-
-    rules = []
-    for item in data.get("rules", []):
-        conditions = [Condition(**c) for c in item.get("conditions", [])]
-        applies_when = [Condition(**c) for c in item.get("applies_when", [])]
-        rules.append(
-            GovernanceRule(
-                id=item["id"],
-                task_type=item["task_type"],
-                description=item.get("description", ""),
-                conditions=conditions,
-                severity=item["severity"],
-                on_hit=item["on_hit"],
-                applies_when=applies_when,
-            )
-        )
-    return rules
 
 
 def _make_engine(tmp_path: Path, rules: list[GovernanceRule]) -> tuple[GovernanceEngine, FileEvidenceStore, FileMemoryStore]:
@@ -65,7 +43,7 @@ def _make_engine(tmp_path: Path, rules: list[GovernanceRule]) -> tuple[Governanc
 class TestBlockScenarioIntegration:
     def test_block_with_real_yaml_rules(self, tmp_path):
         """使用真实 YAML 规则定义，Block fixture 应被阻断。"""
-        rules = _load_rules()
+        rules = load_rules(SCHEMAS_DIR / "rules.yaml")
         engine, _, memory_store = _make_engine(tmp_path, rules)
 
         fixture_path = FIXTURES_DIR / "block_input.yaml"
@@ -89,7 +67,7 @@ class TestBlockScenarioIntegration:
 
     def test_block_write_back(self, tmp_path):
         """Block 决策应能通过 write_back 回写宿主。"""
-        rules = _load_rules()
+        rules = load_rules(SCHEMAS_DIR / "rules.yaml")
         engine, _, _ = _make_engine(tmp_path, rules)
 
         fixture_path = FIXTURES_DIR / "block_input.yaml"
@@ -112,7 +90,7 @@ class TestBlockScenarioIntegration:
 class TestAllowScenarioIntegration:
     def test_allow_with_real_yaml_rules(self, tmp_path):
         """使用真实 YAML 规则定义，Allow fixture 应被放行。"""
-        rules = _load_rules()
+        rules = load_rules(SCHEMAS_DIR / "rules.yaml")
         engine, _, memory_store = _make_engine(tmp_path, rules)
 
         fixture_path = FIXTURES_DIR / "allow_input.yaml"
@@ -135,7 +113,7 @@ class TestAllowScenarioIntegration:
 
     def test_allow_write_back(self, tmp_path):
         """Allow 决策也应能通过 write_back 回写。"""
-        rules = _load_rules()
+        rules = load_rules(SCHEMAS_DIR / "rules.yaml")
         engine, _, _ = _make_engine(tmp_path, rules)
 
         fixture_path = FIXTURES_DIR / "allow_input.yaml"
