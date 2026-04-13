@@ -1,0 +1,22 @@
+# 元模型：动作类型定义
+# Phase 0-1: 定义可对本体执行的操作
+
+action_types:
+  - id: "assign-task"
+    name: "分配任务"
+    description: "将任务分配给指定角色"
+    target_object: "task-type"
+    preconditions:
+      - "assignee has capability required by task"
+    side_effects:
+      - "notify assignee"
+
+  - id: "update-rule"
+    name: "更新治理规则"
+    description: "修改治理规则定义"
+    target_object: "governance-rule"
+    preconditions:
+      - "rule exists"
+      - "schema validation passes"
+    side_effects:
+      - "log change"

@@ -1,0 +1,7 @@
+# Allow 场景 fixture
+# assignee 和 reviewer 不同，不应触发阻断规则
+
+task_type: "C"
+assignee: "developer"
+reviewer: "reviewer"
+session_id: "sess-allow-001"

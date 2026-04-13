@@ -1,0 +1,25 @@
+# 治理本体：角色定义
+# 来源：agents/ 目录中的角色定义 + system/ORCHESTRATION.md
+
+roles:
+  - id: "developer"
+    name: "开发角色"
+    capabilities:
+      - "code_change"
+      - "test_update"
+    permissions:
+      can_modify_files: true
+      can_approve_output: false
+    handoff_to:
+      - "reviewer"
+
+  - id: "reviewer"
+    name: "审查角色"
+    capabilities:
+      - "code_review"
+      - "quality_check"
+    permissions:
+      can_modify_files: false
+      can_approve_output: true
+    handoff_to:
+      - "developer"

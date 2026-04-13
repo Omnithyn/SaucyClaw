@@ -1,0 +1,13 @@
+# 治理本体：规则定义
+# 来源：system/ORCHESTRATION.md 中 C 类任务的审查规则
+
+rules:
+  - id: "rule-reviewer-must-differ"
+    task_type: "C"
+    description: "审查者不能与执行者相同"
+    conditions:
+      - field: "assignee"
+        op: "!="
+        value_from: "reviewer"
+    severity: "block"
+    on_hit: "Block"

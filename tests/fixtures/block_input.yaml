@@ -1,0 +1,7 @@
+# Block 场景 fixture
+# assignee 和 reviewer 相同，应触发 rule-reviewer-must-differ
+
+task_type: "C"
+assignee: "developer"
+reviewer: "developer"
+session_id: "sess-block-001"
