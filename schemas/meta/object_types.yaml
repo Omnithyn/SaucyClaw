@@ -1,0 +1,44 @@
+# 元模型：对象类型定义
+# Phase 0-1: 定义治理域核心对象类型
+
+entity_types:
+  - id: "agent-role"
+    name: "智能体角色"
+    description: "定义多智能体系统中的角色类型"
+    properties:
+      - name: "capabilities"
+        type: "array"
+        required: true
+      - name: "permissions"
+        type: "object"
+        required: false
+
+  - id: "task-type"
+    name: "任务类型"
+    description: "定义任务的分类和执行规则"
+    properties:
+      - name: "required_roles"
+        type: "array"
+        required: true
+      - name: "review_required"
+        type: "boolean"
+        required: false
+
+  - id: "governance-rule"
+    name: "治理规则"
+    description: "定义规则条件和触发动作"
+    properties:
+      - name: "task_type"
+        type: "string"
+        required: true
+      - name: "conditions"
+        type: "array"
+        required: true
+      - name: "severity"
+        type: "enum"
+        values: ["info", "warn", "review", "block"]
+        required: true
+      - name: "on_hit"
+        type: "enum"
+        values: ["Allow", "Review Required", "Block", "Escalate"]
+        required: true

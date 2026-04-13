@@ -1,0 +1,21 @@
+# 元模型：关系类型定义
+# Phase 0-1: 定义治理域对象间关系
+
+relation_types:
+  - id: "role-collaborates"
+    name: "角色协作关系"
+    source: "agent-role"
+    target: "agent-role"
+    cardinality: "many-to-many"
+
+  - id: "role-handoff"
+    name: "角色交接关系"
+    source: "agent-role"
+    target: "agent-role"
+    cardinality: "one-to-many"
+
+  - id: "rule-applies-to"
+    name: "规则适用于任务类型"
+    source: "governance-rule"
+    target: "task-type"
+    cardinality: "many-to-one"

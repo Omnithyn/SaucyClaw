@@ -7,14 +7,7 @@
 
 ## 未决问题
 
-| # | 问题 | 候选方案 | 影响模块 | 决定时限 |
-|---|------|---------|---------|---------|
-| OQ-001 | `FileMemoryStore` 与 `InMemoryMemoryStore` 首轮选哪个为默认？ | A: 只实现 FileMemoryStore<br>B: 两个都实现，File 为默认 | stores | Commit 4 之前 |
-| OQ-002 | `stores/file/` 下 evidence 按什么维度分文件？ | A: 按 session 分目录<br>B: 按日期分目录<br>C: 单文件 JSON Lines | stores/file | Commit 4 之前 |
-| OQ-003 | `OpenClawHostAdapter` 首轮挂接点是什么？ | A: 模拟接口（纯测试用 mock）<br>B: 实际 hook OpenClaw 生命周期<br>C: CLI 入口拦截 | adapters/openclaw | Commit 5 之前 |
-| OQ-004 | `GateResult.suggestions` 是字符串列表还是结构化对象？ | A: `list[str]`（简单）<br>B: `list[dict]`（结构化） | core/engine | Commit 4 之前 |
-| OQ-005 | 旧 `tools/saucyclaw/` 在 Phase 0-1 期间是否标记为 deprecated？ | A: 加 README 说明即将迁移<br>B: 暂不处理 | tools | 非阻塞 |
-| OQ-006 | `pyproject.toml` 放在根目录还是 `tools/` 下？新 core 模块的包管理？ | A: 根目录新建 pyproject.toml<br>B: 复用 tools/pyproject.toml | 项目配置 | Commit 1 之前 |
+无未决问题。
 
 ---
 
@@ -31,3 +24,9 @@
 | D-007 | events 模块是否持有状态？ | 否，纯转换层 | 2026-04-12 |
 | D-008 | HostAdapter 是否需要 get_capabilities？ | 是，增加此方法 | 2026-04-12 |
 | D-009 | MemoryStore.search 是否需要 limit？ | 是，默认 10 | 2026-04-12 |
+| D-010 | MemoryStore 默认实现？ | FileMemoryStore 为默认实现 | 2026-04-13 |
+| D-011 | Evidence 文件组织方式？ | 按 session_id 分 JSONL 文件 | 2026-04-13 |
+| D-012 | OpenClawHostAdapter 首轮挂接点？ | 模拟接口（纯测试用） | 2026-04-13 |
+| D-013 | GateResult.suggestions 类型？ | `list[str]` | 2026-04-13 |
+| D-014 | 旧 tools/ 是否标记 deprecated？ | 暂不处理 | 2026-04-13 |
+| D-015 | pyproject.toml 放哪里？ | 仓库根目录，不碰旧 tools/ | 2026-04-13 |

@@ -156,6 +156,21 @@ Phase 0-1 明确不做：
 
 ---
 
+## 4. 实施决策冻结（6 条）
+
+| # | 决策 | 说明 |
+|---|------|------|
+| D-010 | MemoryStore 默认实现 | `FileMemoryStore` 为默认实现 |
+| D-011 | Evidence 文件组织方式 | 按 `session_id` 分 JSONL 文件 |
+| D-012 | OpenClawHostAdapter 首轮挂接点 | 模拟接口（纯测试用） |
+| D-013 | GateResult.suggestions 类型 | `list[str]` |
+| D-014 | 旧 tools/ 处理 | 暂不标记 deprecated |
+| D-015 | pyproject.toml 位置 | 仓库根目录，不碰旧 `tools/` |
+
+详见 `docs/adr/ADR-0004-store-and-layout-defaults.md`
+
+---
+
 ## 4. 当前态 → 实施态 → 目标态
 
 | 维度 | 当前态 | Phase 0-1 实施态 | 目标态 |
