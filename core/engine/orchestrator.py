@@ -77,7 +77,6 @@ class GovernanceEngine:
             triggered=triggered,
             input_data=input_data,
             source=source,
-            session_id=event.session_id,
         )
         self._memory_store.write(memory_record)
 

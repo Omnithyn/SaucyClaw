@@ -17,7 +17,6 @@ def build_memory_record(
     triggered: list[GovernanceRule],
     input_data: dict,
     source: str = "unknown",
-    session_id: str = "",
 ) -> MemoryRecord:
     """构造一条记忆记录。
 
@@ -25,9 +24,11 @@ def build_memory_record(
     - 有触发的规则 → type="violation"
     - 无触发的规则 → type="pass"
 
-    Summary 模板：
-    - 违规: "{task_type} 类任务触发阻断：{rule_descriptions}"
-    - 放行: "{task_type} 类任务通过治理检查：no rules triggered"
+    Summary 模板（按 decision 区分）：
+    - Block: "{task_type} 类任务触发阻断：{rule_descriptions}"
+    - Review Required: "{task_type} 类任务需要审查：{rule_descriptions}"
+    - Escalate: "{task_type} 类任务触发升级：{rule_descriptions}"
+    - Allow: "{task_type} 类任务通过治理检查：no rules triggered"
 
     Tags 集合：
     - task:<task_type>
@@ -38,11 +39,7 @@ def build_memory_record(
     task_type = input_data.get("task_type", "unknown")
     rec_type = "violation" if triggered else "pass"
 
-    if triggered:
-        descriptions = ", ".join(r.description for r in triggered)
-        summary = f"{task_type} 类任务触发阻断：{descriptions}"
-    else:
-        summary = f"{task_type} 类任务通过治理检查：no rules triggered"
+    summary = _build_summary(decision, task_type, triggered)
 
     tags = [
         f"task:{task_type}",
@@ -61,6 +58,23 @@ def build_memory_record(
         created_at=_now_iso(),
         trend="stable",
     )
+
+
+def _build_summary(
+    decision: str, task_type: str, triggered: list[GovernanceRule]
+) -> str:
+    """根据决策类型生成 summary 模板。"""
+    templates = {
+        "Block": "{task} 类任务触发阻断：{desc}",
+        "Review Required": "{task} 类任务需要审查：{desc}",
+        "Escalate": "{task} 类任务触发升级：{desc}",
+        "Allow": "{task} 类任务通过治理检查：no rules triggered",
+    }
+    template = templates.get(decision, "{task} 类任务治理决策：{desc}")
+    if triggered:
+        descriptions = ", ".join(r.description for r in triggered)
+        return template.format(task=task_type, desc=descriptions)
+    return template.format(task=task_type, desc="")
 
 
 def _now_iso() -> str:

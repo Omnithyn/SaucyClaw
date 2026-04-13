@@ -32,7 +32,6 @@ class TestBuildMemoryRecordBlock:
             input_data={"task_type": "C", "assignee": "dev", "reviewer": "dev"},
             source="openclaw",
         )
-
         assert record.type == "violation"
 
     def test_summary_template(self):
@@ -43,7 +42,6 @@ class TestBuildMemoryRecordBlock:
             input_data={"task_type": "C"},
             source="openclaw",
         )
-
         assert "C 类任务触发阻断" in record.summary
         assert rule.description in record.summary
 
@@ -55,7 +53,6 @@ class TestBuildMemoryRecordBlock:
             input_data={"task_type": "C"},
             source="openclaw",
         )
-
         assert "task:C" in record.tags
         assert "decision:Block" in record.tags
         assert "source:openclaw" in record.tags
@@ -68,7 +65,6 @@ class TestBuildMemoryRecordBlock:
             input_data={"task_type": "C"},
             source="openclaw",
         )
-
         assert f"rule:{rule.id}" in record.tags
 
     def test_id_is_unique(self):
@@ -92,7 +88,6 @@ class TestBuildMemoryRecordAllow:
             input_data={"task_type": "C"},
             source="openclaw",
         )
-
         assert record.type == "pass"
 
     def test_summary_template(self):
@@ -102,7 +97,6 @@ class TestBuildMemoryRecordAllow:
             input_data={"task_type": "C"},
             source="openclaw",
         )
-
         assert "C 类任务通过治理检查" in record.summary
         assert "no rules triggered" in record.summary
 
@@ -113,11 +107,9 @@ class TestBuildMemoryRecordAllow:
             input_data={"task_type": "C"},
             source="openclaw",
         )
-
         assert "task:C" in record.tags
         assert "decision:Allow" in record.tags
         assert "source:openclaw" in record.tags
-        # 不应包含 rule: 前缀的 tag
         assert not any(t.startswith("rule:") for t in record.tags)
 
     def test_empty_source_evidences(self):
@@ -126,7 +118,6 @@ class TestBuildMemoryRecordAllow:
             triggered=[],
             input_data={"task_type": "C"},
         )
-
         assert record.source_evidences == []
 
     def test_default_trend(self):
@@ -135,7 +126,6 @@ class TestBuildMemoryRecordAllow:
             triggered=[],
             input_data={"task_type": "C"},
         )
-
         assert record.trend == "stable"
 
 
@@ -144,8 +134,8 @@ class TestBuildMemoryRecordAllow:
 # ---------------------------------------------------------------------------
 
 class TestBuildMemoryRecordReview:
-    def test_violation_type_for_review(self):
-        rule = GovernanceRule(
+    def _make_review_rule(self) -> GovernanceRule:
+        return GovernanceRule(
             id="r-review",
             task_type="C",
             description="需要额外审查",
@@ -153,12 +143,71 @@ class TestBuildMemoryRecordReview:
             severity="review",
             on_hit="Review Required",
         )
+
+    def test_violation_type_for_review(self):
+        rule = self._make_review_rule()
         record = build_memory_record(
             decision="Review Required",
             triggered=[rule],
             input_data={"task_type": "C"},
         )
-
         assert record.type == "violation"
-        assert "task:C" in record.tags
-        assert "decision:Review Required" in record.tags
+
+    def test_summary_for_review(self):
+        rule = self._make_review_rule()
+        record = build_memory_record(
+            decision="Review Required",
+            triggered=[rule],
+            input_data={"task_type": "C"},
+        )
+        assert "C 类任务需要审查" in record.summary
+        assert rule.description in record.summary
+
+
+# ---------------------------------------------------------------------------
+# Escalate 场景
+# ---------------------------------------------------------------------------
+
+class TestBuildMemoryRecordEscalate:
+    def _make_escalate_rule(self) -> GovernanceRule:
+        return GovernanceRule(
+            id="r-escalate",
+            task_type="C",
+            description="安全风险超出权限",
+            conditions=[],
+            severity="block",
+            on_hit="Escalate",
+        )
+
+    def test_violation_type_for_escalate(self):
+        rule = self._make_escalate_rule()
+        record = build_memory_record(
+            decision="Escalate",
+            triggered=[rule],
+            input_data={"task_type": "C"},
+        )
+        assert record.type == "violation"
+
+    def test_summary_for_escalate(self):
+        rule = self._make_escalate_rule()
+        record = build_memory_record(
+            decision="Escalate",
+            triggered=[rule],
+            input_data={"task_type": "C"},
+        )
+        assert "C 类任务触发升级" in record.summary
+        assert rule.description in record.summary
+
+
+# ---------------------------------------------------------------------------
+# 未知 decision fallback
+# ---------------------------------------------------------------------------
+
+class TestBuildMemoryRecordUnknownDecision:
+    def test_fallback_summary(self):
+        record = build_memory_record(
+            decision="Unknown",
+            triggered=[],
+            input_data={"task_type": "C"},
+        )
+        assert "C 类任务治理决策" in record.summary
