@@ -170,3 +170,33 @@
 
 ### 风险/偏差
 - 无
+
+---
+
+## Phase 1.2 — 规则扩展与治理语义充实
+
+状态：已完成
+
+### 完成内容
+- [x] `schemas/governance/roles.yaml` — 从 2 角色扩展到 5 角色（developer, specialist, reviewer, manager, orchestrator）
+- [x] `schemas/governance/task_types.yaml` — 从 C 类单类型扩展到 A-E 五类
+- [x] `schemas/governance/rules.yaml` — 从 1 条规则扩展到 5 条：
+  - `rule-reviewer-must-differ` → Block（审查者 ≠ 执行者）
+  - `rule-specialist-not-direct-output` → Block（direct_output 必须为 false）
+  - `rule-handoff-required` → Block（handoff 必须为 true）
+  - `rule-restricted-routing` → Block（assignee 必须在允许列表中）
+  - `rule-escalate-on-conflict` → Escalate（conflict 必须为 false）
+- [x] 单元测试新增 10 个 Phase 1.2 场景（Block/Escalate/Allow/正向路由）
+- [x] 集成测试 fixtures 更新（allow_input.yaml 和 block_input.yaml 补充 compliance 字段）
+
+### 规则条件设计原则
+- 所有规则条件采用**合规检查风格**：条件通过 = 状态合规，条件不通过 = 违规触发
+- 这与 `evaluate_rule()` 和 `match_rules()` 的现有语义保持一致：
+  - `evaluate_rule()` 返回 True = 条件全部通过 = 合规
+  - `match_rules()` 返回 `evaluate_rule()` 为 False 的规则 = 违规
+- 固有限制：AND-only 匹配器无法表达 "NOT (A AND B)" 的条件性适用规则，
+  因此每条规则只用单个核心合规条件，角色/任务类型限定由 routing 层保证
+
+### 风险/偏差
+- AND-only 匹配器限制了条件性规则的表达能力（如需 "仅当 task_type=D 时检查 handoff"），
+  后续如需支持，可引入 OR/NOT 操作符或条件嵌套
