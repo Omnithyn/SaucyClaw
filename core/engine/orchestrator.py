@@ -9,6 +9,7 @@ from stores.protocols import (
     MemoryStore,
     NormalizedEvent,
 )
+from core.engine.memory_builder import build_memory_record
 from core.events.normalizer import EventNormalizer
 from core.evidence.generator import EvidenceGenerator, summarize_governance_action
 from core.governance.matcher import match_rules
@@ -46,8 +47,10 @@ class GovernanceEngine:
         1. 标准化事件
         2. 提取评估输入
         3. 匹配规则
-        4. 生成并存储证据
-        5. 决策并返回 GateResult
+        4. 生成并存储证据（仅违规时）
+        5. 决策
+        6. 构建并写入记忆记录
+        7. 返回 GateResult
         """
         # 1. 标准化
         event = self._normalizer.normalize(raw_event)
@@ -58,7 +61,7 @@ class GovernanceEngine:
         # 3. 匹配规则
         triggered = match_rules(self._rules, input_data)
 
-        # 4. 生成并存储证据
+        # 4. 生成并存储证据（仅违规时）
         evidences: list[Evidence] = []
         if triggered:
             evidences = self._generator.generate_batch(triggered, event, input_data)
@@ -67,7 +70,18 @@ class GovernanceEngine:
         # 5. 决策
         decision, reason, matched_ids = summarize_governance_action(triggered)
 
-        # 6. 建议（Phase 0-1: 基于决策类型生成简单建议）
+        # 6. 构建并写入记忆记录
+        source = input_data.get("source", event.source)
+        memory_record = build_memory_record(
+            decision=decision,
+            triggered=triggered,
+            input_data=input_data,
+            source=source,
+            session_id=event.session_id,
+        )
+        self._memory_store.write(memory_record)
+
+        # 7. 建议（Phase 0-1: 基于决策类型生成简单建议）
         suggestions = self._generate_suggestions(decision, triggered)
 
         return GateResult(

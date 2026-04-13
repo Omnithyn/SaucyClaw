@@ -112,7 +112,7 @@
 - [x] 集成测试（Block + Allow，使用真实 YAML 规则）
 
 ### 未完成
-- MemoryStore 未接入 GovernanceEngine（仅构造实例，不写入）
+- 无（Phase 1.1 已接入主流程）
 
 ### 风险/偏差
 - 无（OQ-001/002/004 已决，见 ADR-0004）
@@ -141,7 +141,7 @@
 
 ### Memory 状态
 - **已完成**：MemoryStore 接口 + FileMemoryStore 默认实现
-- **未完成**：治理流程中的记忆沉淀接入（Phase 1.1 补入）
+- **已完成**（Phase 1.1）：治理流程中的记忆沉淀接入
 
 ### Allow 证据策略
 - Allow 场景（无规则触发）**不生成 evidence**
@@ -150,3 +150,23 @@
 ### 语义修正
 - `Evidence.governance_version` 在 Phase 0-1 固定为 `None`，留待上层注入
 - `match_rules()` 返回的是**违规触发**的规则列表（条件不满足 = 违规），非"条件匹配"的规则
+
+---
+
+## Phase 1.1 — Memory 接入主流程
+
+状态：已完成
+
+### 完成内容
+- [x] `core/engine/memory_builder.py` — MemoryRecord 模板化构造器
+- [x] GovernanceEngine 在决策后写入 MemoryRecord（Block 和 Allow 都写）
+- [x] 单元测试（10 tests，覆盖 violation/pass/review 类型）
+- [x] 集成测试更新（验证 memory 中可查到对应记录）
+
+### 记忆规则
+- 有触发规则 → type="violation"
+- 无触发规则 → type="pass"
+- Tags：task:<type>, decision:<decision>, source:<source>, rule:<id>（仅 violation）
+
+### 风险/偏差
+- 无
