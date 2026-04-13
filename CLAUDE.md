@@ -1,8 +1,12 @@
 # CLAUDE.md
 
-SaucyClaw 是一个围绕 OpenClaw 多智能体治理的样例工程。
+SaucyClaw 是一个**通用 agent hardness engineering 基线工程**，并保持对 OpenClaw 的兼容适配能力（兼容，不绑定）。
 
 本文件用于给 Claude / Codex / 其他进入仓库的 AI 编程工具一个简明入口，避免它们一进来就把项目误判为普通代码仓库。
+
+## 语义裁决来源（必读）
+
+若本文件与其他入口文档存在表达差异，统一以 `system/SYSTEM_SPEC.md` 为准。
 
 ## 先看哪里
 首次进入仓库时，建议按以下顺序阅读：
@@ -17,9 +21,9 @@ SaucyClaw 是一个围绕 OpenClaw 多智能体治理的样例工程。
 
 ## 仓库本质
 SaucyClaw 当前更像：
-- 多智能体治理样板
+- 通用 hardness engineering 治理基线
 - 角色组织与边界模板
-- OpenClaw 兼容结构样例
+- OpenClaw 兼容结构样例（非 OpenClaw 专属）
 - 便于复制与二次定制的基线工程
 
 而不是：

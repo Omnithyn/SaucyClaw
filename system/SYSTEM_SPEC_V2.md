@@ -75,3 +75,14 @@ SaucyClaw 的目标不只是让多个 agent 一起工作，而是：
 2. 再补角色与评测资产
 3. 再逐步替换旧版主文件
 4. 最后统一 README 与项目总览
+
+## 七、退出草案条件（V2 Activation Exit Criteria）
+
+V2 在满足以下条件前，维持“草案”状态：
+
+1. 与 V1 的差异清单已完成（SYSTEM / ORCHESTRATION / STANDARDS 三件套）
+2. 迁移步骤可执行（包含“谁改、改哪、如何验收”）
+3. README 与 CLAUDE 的项目定位与 V2 完全一致
+4. 至少一轮基于 evals 的回归记录证明迁移未引入关键退化
+
+当以上条件满足后，可在 `system/SYSTEM_SPEC.md` 中切换默认生效版本并公告生效日期。
