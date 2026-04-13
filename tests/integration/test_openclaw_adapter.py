@@ -70,8 +70,6 @@ class TestBlockScenarioIntegration:
         with open(fixture_path) as f:
             fixture = yaml.safe_load(f)
 
-        adapter = OpenClawHostAdapter()
-
         # 引擎处理
         result = engine.process_event(fixture)
 
