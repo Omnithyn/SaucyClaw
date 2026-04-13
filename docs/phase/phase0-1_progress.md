@@ -69,12 +69,12 @@
 
 ## Commit 3 — events + evidence
 
-状态：未开始
+状态：已完成
 
 ### 完成内容
-- [ ] events normalizer
-- [ ] evidence generator
-- [ ] 单元测试
+- [x] events normalizer
+- [x] evidence generator
+- [x] 单元测试（19 tests, 新增模块 100% 覆盖）
 
 ### 未完成
 - 无
