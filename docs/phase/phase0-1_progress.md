@@ -7,7 +7,7 @@
 
 ## Commit 0 — 过程资料与仓库基线
 
-状态：**进行中**
+状态：**已完成**
 
 ### 完成内容
 - [x] `docs/phase/phase0-1_status.md` — 阶段状态基线
@@ -18,6 +18,7 @@
 - [x] `docs/adr/ADR-0001-phase0-1-scope.md`
 - [x] `docs/adr/ADR-0002-minimal-interfaces.md`
 - [x] `docs/adr/ADR-0003-evidence-model.md`
+- [x] `docs/adr/ADR-0004-store-and-layout-defaults.md`
 
 ### 未完成
 - 无
@@ -29,19 +30,23 @@
 
 ## Commit 1 — 项目骨架与 Schema 样例
 
-状态：未开始
+状态：**已完成**
 
 ### 完成内容
-- [ ] 创建目录结构
-- [ ] 增加基础 YAML schema 样例
-- [ ] 新增 dataclass 骨架
-- [ ] 新增测试 fixture
+- [x] `pyproject.toml` — 根目录开发配置
+- [x] `stores/protocols.py` — 三个 Protocol 抽象
+- [x] `core/governance/models.py` — 治理域 dataclass
+- [x] `schemas/governance/roles.yaml` — 角色定义样例
+- [x] `schemas/governance/task_types.yaml` — 任务类型定义样例
+- [x] `schemas/governance/rules.yaml` — 治理规则定义样例
+- [x] `tests/fixtures/block_input.yaml` — Block 场景 fixture
+- [x] `tests/fixtures/allow_input.yaml` — Allow 场景 fixture
 
 ### 未完成
 - 无
 
 ### 风险/偏差
-- 待确认 pyproject.toml 位置（见 OQ-006）
+- 无
 
 ---
 
@@ -94,9 +99,7 @@
 - 无
 
 ### 风险/偏差
-- 待确认 evidence 文件分维度方式（见 OQ-002）
-- 待确认 MemoryStore 默认实现（见 OQ-001）
-- 待确认 GateResult.suggestions 类型（见 OQ-004）
+- 无（OQ-001/002/004 已决，见 ADR-0004）
 
 ---
 
@@ -112,4 +115,4 @@
 - 无
 
 ### 风险/偏差
-- 待确认挂接点方式（见 OQ-003）
+- 无（OQ-003 已决，见 ADR-0004）
