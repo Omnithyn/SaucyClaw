@@ -200,3 +200,27 @@
 ### 风险/偏差
 - AND-only 匹配器限制了条件性规则的表达能力（如需 "仅当 task_type=D 时检查 handoff"），
   后续如需支持，可引入 OR/NOT 操作符或条件嵌套
+
+---
+
+## Phase 1.3 — 规则适用性层（applies_when）
+
+状态：已完成
+
+### 完成内容
+- [x] `core/governance/models.py` — `GovernanceRule` 新增 `applies_when: list[Condition]` 字段
+- [x] `core/governance/matcher.py` — `evaluate_rule()` 改为两段式：先判适用性，再判合规性
+- [x] `schemas/governance/rules.yaml` — 2 条规则迁移到 `applies_when`：
+  - `rule-specialist-not-direct-output`: applies_when `assignee in [specialist, developer]`
+  - `rule-handoff-required`: applies_when `task_type == "D"`
+- [x] `tests/integration/test_openclaw_adapter.py` — YAML 加载器适配 `applies_when` 解析
+- [x] `tests/unit/test_governance_matcher.py` — 5 个新场景（适用/不适用/违规/合规）
+- [x] 101 tests 全部通过，pyflakes 零报错
+
+### applies_when 语义
+- applies_when 不满足 → 规则不适用 → `evaluate_rule()` 返回 True（不违规）
+- applies_when 满足 → 再 eval conditions，决定合规/违规
+- applies_when 与 conditions 一样，Phase 1.3 保持 AND-only，不支持 OR/NOT/分组
+
+### 风险/偏差
+- 无

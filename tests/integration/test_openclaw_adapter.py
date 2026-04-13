@@ -32,6 +32,7 @@ def _load_rules() -> list[GovernanceRule]:
     rules = []
     for item in data.get("rules", []):
         conditions = [Condition(**c) for c in item.get("conditions", [])]
+        applies_when = [Condition(**c) for c in item.get("applies_when", [])]
         rules.append(
             GovernanceRule(
                 id=item["id"],
@@ -40,6 +41,7 @@ def _load_rules() -> list[GovernanceRule]:
                 conditions=conditions,
                 severity=item["severity"],
                 on_hit=item["on_hit"],
+                applies_when=applies_when,
             )
         )
     return rules

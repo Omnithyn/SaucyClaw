@@ -48,6 +48,7 @@ class GovernanceRule:
     conditions 仅支持单层简单结构，不支持 and/or 嵌套。
     severity 只允许: info, warn, review, block
     on_hit 只允许: Allow, Review Required, Block, Escalate
+    applies_when: 规则适用前提，Phase 1.3 与 conditions 一样，均为单层 AND-only 条件列表。
     """
     id: str
     task_type: str
@@ -55,6 +56,7 @@ class GovernanceRule:
     conditions: list[Condition]
     severity: str
     on_hit: str
+    applies_when: list[Condition] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

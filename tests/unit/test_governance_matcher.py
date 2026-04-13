@@ -214,14 +214,17 @@ class TestPhase12Rules:
 
     # --- rule-specialist-not-direct-output ---
     # 合规检查风格：direct_output 必须为 "false"（输出需经 review）
-    # 条件通过 = 合规，条件不通过 = 违规
+    # Phase 1.3: 通过 applies_when 限定仅 specialist/developer 适用
 
     def test_specialist_direct_output_blocked(self):
-        """direct_output 为 true → 条件不通过 → 违规触发。"""
+        """specialist 的 direct_output 为 true → 适用且违规 → Block。"""
         rule = GovernanceRule(
             id="rule-specialist-not-direct-output",
             task_type="C",
             description="specialist 不得直接输出最终答案给 CEO",
+            applies_when=[
+                Condition(field="assignee", op="in", value=["specialist", "developer"]),
+            ],
             conditions=[
                 Condition(field="direct_output", op="==", value="false"),
             ],
@@ -229,17 +232,20 @@ class TestPhase12Rules:
             on_hit="Block",
         )
         inp = {"assignee": "specialist", "direct_output": "true"}
-        # "true" == "false" → False → evaluate_rule=False → match_rules 返回该规则
+        # applies_when: True, conditions: False → evaluate=False → 违规
         matched = match_rules([rule], inp)
         assert len(matched) == 1
         assert matched[0].on_hit == "Block"
 
     def test_specialist_via_reviewer_allowed(self):
-        """direct_output 为 false → 条件通过 → 合规。"""
+        """specialist 的 direct_output 为 false → 适用且合规。"""
         rule = GovernanceRule(
             id="rule-specialist-not-direct-output",
             task_type="C",
             description="specialist 不得直接输出最终答案给 CEO",
+            applies_when=[
+                Condition(field="assignee", op="in", value=["specialist", "developer"]),
+            ],
             conditions=[
                 Condition(field="direct_output", op="==", value="false"),
             ],
@@ -247,20 +253,19 @@ class TestPhase12Rules:
             on_hit="Block",
         )
         inp = {"assignee": "specialist", "direct_output": "false", "reviewer": "reviewer"}
-        # "false" == "false" → True → evaluate_rule=True → match_rules=[]
+        # applies_when: True, conditions: True → evaluate=True → match_rules=[]
         matched = match_rules([rule], inp)
         assert matched == []
 
-    def test_non_specialist_direct_output_blocked(self):
-        """非 specialist 角色 direct_output 为 true → 同样触发规则。
-
-        注意：单条件合规检查不区分角色。direct_output == "true" 即违规。
-        角色限制由 routing 层保证。
-        """
+    def test_non_specialist_direct_output_allowed(self):
+        """manager 的 direct_output 为 true → 不适用 → 不违规。"""
         rule = GovernanceRule(
             id="rule-specialist-not-direct-output",
             task_type="C",
             description="specialist 不得直接输出最终答案给 CEO",
+            applies_when=[
+                Condition(field="assignee", op="in", value=["specialist", "developer"]),
+            ],
             conditions=[
                 Condition(field="direct_output", op="==", value="false"),
             ],
@@ -268,19 +273,23 @@ class TestPhase12Rules:
             on_hit="Block",
         )
         inp = {"assignee": "manager", "direct_output": "true"}
-        # "true" == "false" → False → evaluate_rule=False → 违规
+        # applies_when: manager not in [...] → False → 不适用 → evaluate=True
         matched = match_rules([rule], inp)
-        assert len(matched) == 1
+        assert matched == []
 
     # --- rule-handoff-required ---
     # 合规检查风格：handoff 必须为 "true"
+    # Phase 1.3: 通过 applies_when 限定仅 D 类任务适用
 
     def test_d_task_no_handoff_blocked(self):
-        """handoff 为 false → 条件不通过 → 违规触发。"""
+        """D 类任务的 handoff 为 false → 适用且违规 → Block。"""
         rule = GovernanceRule(
             id="rule-handoff-required",
             task_type="D",
             description="多阶段任务进入 review 前必须有 handoff 记录",
+            applies_when=[
+                Condition(field="task_type", op="==", value="D"),
+            ],
             conditions=[
                 Condition(field="handoff", op="==", value="true"),
             ],
@@ -288,17 +297,20 @@ class TestPhase12Rules:
             on_hit="Block",
         )
         inp = {"task_type": "D", "handoff": "false", "reviewer": "reviewer"}
-        # "false" == "true" → False → evaluate=False → 违规
+        # applies_when: True, conditions: False → evaluate=False → 违规
         matched = match_rules([rule], inp)
         assert len(matched) == 1
         assert matched[0].on_hit == "Block"
 
     def test_d_task_with_handoff_allowed(self):
-        """handoff 为 true → 条件通过 → 合规。"""
+        """D 类任务的 handoff 为 true → 适用且合规。"""
         rule = GovernanceRule(
             id="rule-handoff-required",
             task_type="D",
             description="多阶段任务进入 review 前必须有 handoff 记录",
+            applies_when=[
+                Condition(field="task_type", op="==", value="D"),
+            ],
             conditions=[
                 Condition(field="handoff", op="==", value="true"),
             ],
@@ -306,7 +318,27 @@ class TestPhase12Rules:
             on_hit="Block",
         )
         inp = {"task_type": "D", "handoff": "true", "reviewer": "reviewer"}
-        # "true" == "true" → True → evaluate=True → match_rules=[]
+        # applies_when: True, conditions: True → evaluate=True → match_rules=[]
+        matched = match_rules([rule], inp)
+        assert matched == []
+
+    def test_c_task_handoff_not_applicable(self):
+        """C 类任务的 handoff 为 false → 不适用 → 不违规。"""
+        rule = GovernanceRule(
+            id="rule-handoff-required",
+            task_type="D",
+            description="多阶段任务进入 review 前必须有 handoff 记录",
+            applies_when=[
+                Condition(field="task_type", op="==", value="D"),
+            ],
+            conditions=[
+                Condition(field="handoff", op="==", value="true"),
+            ],
+            severity="block",
+            on_hit="Block",
+        )
+        inp = {"task_type": "C", "handoff": "false", "reviewer": "reviewer"}
+        # applies_when: "C" != "D" → False → 不适用 → evaluate=True
         matched = match_rules([rule], inp)
         assert matched == []
 
@@ -395,6 +427,9 @@ class TestPhase12Rules:
                 id="rule-specialist-not-direct-output",
                 task_type="C",
                 description="specialist 不得直接输出最终答案给 CEO",
+                applies_when=[
+                    Condition(field="assignee", op="in", value=["specialist", "developer"]),
+                ],
                 conditions=[
                     Condition(field="direct_output", op="==", value="false"),
                 ],
@@ -418,7 +453,7 @@ class TestPhase12Rules:
             "direct_output": "false",
             "handoff": "true",
         }
-        # specialist rule: "false"=="false" → True → pass
+        # specialist rule: applies_when True, conditions True → pass
         # reviewer rule: "specialist" != "reviewer" → True → pass
         matched = match_rules(rules, inp)
         assert matched == []

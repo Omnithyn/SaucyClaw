@@ -15,10 +15,15 @@ rules:
     on_hit: "Block"
 
   # 角色分离类：specialist 不能直接输出给 CEO
-  # 合规检查：direct_output 必须为 "false"（输出需经 review）
+  # applies_when: 仅 specialist/developer 适用
+  # conditions: direct_output 必须为 "false"（输出需经 review）
   - id: "rule-specialist-not-direct-output"
     task_type: "C"
     description: "specialist 不得直接输出最终答案给 CEO"
+    applies_when:
+      - field: "assignee"
+        op: "in"
+        value: ["specialist", "developer"]
     conditions:
       - field: "direct_output"
         op: "=="
@@ -27,10 +32,15 @@ rules:
     on_hit: "Block"
 
   # 任务分流类：D 类任务必须有 handoff 记录才能进入 review
-  # 合规检查：handoff 必须为 "true"
+  # applies_when: 仅 D 类任务适用
+  # conditions: handoff 必须为 "true"
   - id: "rule-handoff-required"
     task_type: "D"
     description: "多阶段任务进入 review 前必须有 handoff 记录"
+    applies_when:
+      - field: "task_type"
+        op: "=="
+        value: "D"
     conditions:
       - field: "handoff"
         op: "=="
