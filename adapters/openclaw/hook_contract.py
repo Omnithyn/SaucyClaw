@@ -3,6 +3,7 @@
 Phase 2.3: 固定外部接入契约，为未来对接真实 OpenClaw 或其他 runtime 提供统一接口草图。
 
 本文件仅包含 Protocol 定义，不参与实际运行。
+Phase 2.4: ExplainBridge 已补齐 enabled property，与 ExplainPayload 对齐。
 """
 
 from __future__ import annotations
@@ -42,6 +43,8 @@ class ExplainPayload(Protocol):
 
     对应 ExplainBridge.enhance_output 的契约。
     任何解释桥接器都应遵守此协议。
+
+    当前 ExplainBridge 已实现 enabled 只读 property（Phase 2.4 补齐）。
     """
 
     def enhance_output(self, result: GateResult) -> AdapterExplainOutput:
@@ -57,12 +60,7 @@ class ExplainPayload(Protocol):
 
     @property
     def enabled(self) -> bool:
-        """Shadow Mode 开关状态。
-
-        注：当前 ExplainBridge 实现使用 _enabled 内部属性，
-        未暴露公开 enabled property。此 Protocol 项为未来
-        真实集成预留契约占位。
-        """
+        """Shadow Mode 开关状态。"""
         ...
 
 

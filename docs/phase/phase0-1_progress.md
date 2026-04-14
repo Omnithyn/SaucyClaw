@@ -472,68 +472,54 @@ print(bundle.risk_summary)
     - `__init__(schema_rules_lookup, enable=False)`：初始化，支持开关
     - `enable_shadow_mode()` / `disable_shadow_mode()`：运行时切换
     - `enhance_output(result: GateResult)`：生成桥接输出
-- [x] `tests/unit/test_explain_bridge.py` — 7 个单元测试：
-  - `test_enhance_output_with_bundle`：Shadow Mode 启用时返回 explanation_bundle
-  - `test_enhance_output_without_bundle`：Shadow Mode 关闭时 explanation_bundle 为 None
-  - `test_shadow_mode_toggle`：开关切换有效
-  - `test_adapter_write_back_still_accepts_raw_gate_result`：原 adapter 契约未被破坏
-  - `test_adapter_explain_output_fields_completeness`：字段完整性验证
-  - `test_enhance_output_with_no_matched_rules`：无匹配规则降级
-  - `test_enhance_output_with_unknown_rule_id`：未知 rule_id 降级
-- [x] 159 tests 全部通过（+7 新测试），pyflakes 零报错
+- [x] `tests/unit/test_explain_bridge.py` — 7 个单元测试
 
-### 设计原则
+### 关键设计点
 - **外围桥接**：不修改 `adapter.write_back()` 契约，仍接受 `GateResult`
 - **Shadow Mode**：默认关闭（enable=False），显式开启
 - **伴随输出**：`enhance_output()` 生成额外的解释包，原始 `GateResult` 保持完整
-- **独立文件**：`explain_bridge.py` 与 adapter 同目录，边界清晰
-- **可选使用**：不影响现有流程，只在需要时调用
-
-### 关键设计点
-| 设计决策 | 说明 |
-|----------|------|
-| 不改 `write_back()` | `adapter.write_back(result)` 仍接受 `GateResult`，不返回 dict |
-| `enhance_output()` | 只生成桥接输出，不改变 adapter 行为 |
-| `raw_result` | 保留原始 `GateResult`，供 adapter 使用 |
-| `explanation_bundle` | 可选（None | Bundle），Shadow Mode 开启时才有 |
-| 默认关闭 | `enable=False`，保持最小侵入 |
-
-### 使用示例
-```python
-from adapters.openclaw.explain_bridge import ExplainBridge
-
-# 创建 bridge
-bridge = ExplainBridge(schema_rules_lookup, enable=True)
-
-# 处理事件
-result = engine.process_event(raw_event)
-
-# 生成增强输出（用于调试/日志/旁路展示）
-enhanced = bridge.enhance_output(result)
-
-# 仍然保持原 adapter 行为
-adapter.write_back(result)
-
-# enhanced 用于：
-# - 调试输出
-# - 日志记录
-# - 宿主旁路展示
-# - 后续真实 hook 契约验证
-
-print(enhanced.explanation_bundle.readable_summary)
-# "触发阻断（high/separation_of_duties）：..."
-print(enhanced.explanation_bundle.risk_summary)
-# "高风险规则触发"
-```
-
-### 价值体现
-- **解释信息成为伴随输出**：不再需要每次手工拼接
-- **Adapter 契约保持不变**：`write_back(result)` 仍接受 `GateResult`
-- **调试友好**：`enhanced.explanation_bundle` 可用于调试输出、日志
-- **真实 hook 前的契约验证**：输出结构稳定后，再接入真实 hook
-- **影子集成**：不改变核心逻辑，只提供额外信息
 
 ### 风险/偏差
 - 无（完全外围桥接，不影响 adapter 核心契约）
 
 ---
+
+## M1 — 宿主接入可交付包
+
+状态：**已完成**
+
+### 概述
+
+从 Phase 2.0 到 Phase 2.6 的外围接入能力已收口为一个可交付包：
+**治理决策、解释输出、运行摘要、调试渲染与接入契约已形成闭环。**
+
+### 完成内容
+
+#### 结构收口（Phase 2.2 / 2.3 / 2.4）
+- [x] `adapters/openclaw/shadow_runtime.py` — Shadow Mode 外围接入模板
+- [x] `adapters/openclaw/hook_contract.py` — 4 个 Protocol 定义外部接入契约
+- [x] `adapters/openclaw/__init__.py` — 完整导出所有公开 API
+- [x] `ExplainBridge.enabled` — 补公开只读 property，与 Protocol 对齐
+
+#### 可观测性（Phase 2.5 / 2.6）
+- [x] `adapters/openclaw/runtime_trace.py` — frozen dataclass + build_runtime_trace 纯函数
+- [x] `adapters/openclaw/debug_render.py` — render_shadow_run 调试输出渲染器
+
+#### 示例与文档
+- [x] `examples/openclaw_shadow_runtime_example.py` — 统一为 RuntimeTrace + render_shadow_run
+- [x] `docs/integration/openclaw_shadow_runtime.md` — 宿主接入说明文档
+
+#### 测试证明
+- [x] `tests/unit/test_shadow_runtime.py` — 5 个测试（无 bridge / bridge 关闭 / bridge 开启 / Allow / write_back_log）
+- [x] `tests/unit/test_hook_contract.py` — 8 个测试（Protocol shape / example smoke / 组件兼容性）
+- [x] `tests/unit/test_hook_contract_conformance.py` — 20 个测试（4 组件 × 运行时一致性 + 5 个 example 验证）
+- [x] `tests/unit/test_runtime_trace.py` — 6 个测试（Block / Allow / 无 bridge / bridge 关闭 / frozen）
+- [x] `tests/unit/test_debug_render.py` — 3 个测试（Block / Allow / 无 bridge）
+
+### 保证
+- **零 core 改动**：所有模块位于 `adapters/openclaw/`
+- **零 adapter 契约改动**：`write_back(GateResult)` 签名不变
+- **零真实 hook 接入**：基于 mock adapter 的最小闭环
+
+### 风险/偏差
+- 当前仍为 mock adapter，真实 OpenClaw hook 接入需后续完成

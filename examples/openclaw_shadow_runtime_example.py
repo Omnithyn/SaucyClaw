@@ -1,7 +1,6 @@
-"""Shadow Runtime 接入示例。
+"""OpenClaw Shadow Runtime 接入示例。
 
-Phase 2.3: 演示外部调用方如何使用 SaucyClaw 治理链路。
-Phase 2.6: 统一为 RuntimeTrace + render_shadow_run 调试输出。
+M1 — 宿主接入可交付包演示。
 
 运行方式：
     python -m examples.openclaw_shadow_runtime_example
