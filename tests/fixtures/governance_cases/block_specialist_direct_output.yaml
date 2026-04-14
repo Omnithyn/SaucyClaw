@@ -1,0 +1,13 @@
+task_type: "C"
+assignee: "specialist"
+reviewer: "manager"
+direct_output: "true"
+handoff: "true"
+conflict: "false"
+session_id: "case-002"
+
+expected:
+  decision: "Block"
+  matched_rules:
+    - "rule-specialist-not-direct-output"
+    - "rule-restricted-routing"

@@ -1,0 +1,12 @@
+task_type: "C"
+assignee: "manager"
+reviewer: "reviewer"
+direct_output: "false"
+handoff: "true"
+conflict: "true"
+session_id: "case-006"
+
+expected:
+  decision: "Escalate"
+  matched_rules:
+    - "rule-escalate-on-conflict"

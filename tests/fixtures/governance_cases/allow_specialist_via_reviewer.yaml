@@ -1,0 +1,11 @@
+task_type: "C"
+assignee: "manager"
+reviewer: "reviewer"
+direct_output: "false"
+handoff: "true"
+conflict: "false"
+session_id: "case-003"
+
+expected:
+  decision: "Allow"
+  matched_rules: []

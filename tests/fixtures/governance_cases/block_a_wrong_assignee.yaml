@@ -1,0 +1,12 @@
+task_type: "A"
+assignee: "developer"
+reviewer: "reviewer"
+direct_output: "false"
+handoff: "true"
+conflict: "false"
+session_id: "case-005"
+
+expected:
+  decision: "Block"
+  matched_rules:
+    - "rule-restricted-routing"
