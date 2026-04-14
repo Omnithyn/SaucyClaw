@@ -386,3 +386,77 @@
 - 无（保持克制，未侵入核心逻辑）
 
 ---
+## Phase 1.9 — 解释信息接入运行时输出面
+
+状态：已完成
+
+### 完成内容
+- [x] `core/governance/explainer_bundle.py` — 解释输出打包器，包含：
+  - `ExplanationBundle` dataclass（decision, matched_rule_ids, explanations, readable_summary, suggestions, risk_summary）
+  - `bundle_explanations()`：输入 `matched_rule_ids`（来自 GateResult）+ lookup 表，输出完整解释包
+- [x] `tests/unit/test_governance_explainer_bundle.py` — 8 个单元测试：
+  - `test_bundle_single_rule`：单规则打包（所有字段非空）
+  - `test_bundle_multiple_rules`：多规则打包（summaries 合并）
+  - `test_bundle_no_matched_rules`：无匹配降级
+  - `test_risk_summary_computation`：风险摘要计算（取最高风险）
+  - `test_unknown_rule_id_degradation`：未知 rule_id 降级（不崩溃）
+  - `test_explanation_bundle_fields_completeness`：字段完整性验证
+  - `test_bundle_with_escalate_decision`：Escalate 决策打包
+  - `test_decision_text_mapping`：决策类型到可读文本映射
+- [x] 152 tests 全部通过（+8 新测试），pyflakes 零报错
+
+### 设计原则
+- **外围 helper**：不修改 `GateResult` / `matcher.py` / `engine.py`
+- **完整包装**：包含解释结构 + 可读文本 + 建议 + 风险等级摘要
+- **独立文件**：`explainer_bundle.py` 与 `explainer.py` 平级
+- **可选使用**：不影响现有流程，只在需要时调用
+- **直接接入**：`bundle_explanations()` 直接接受 `matched_rule_ids`（来自 GateResult），无需调用方转换
+- **降级安全**：未知 rule_id 直接忽略，不崩溃
+
+### 解释输出包字段
+| 字段 | 来源 | 说明 |
+|------|------|------|
+| `decision` | GateResult.decision | 决策结果 |
+| `matched_rule_ids` | GateResult.matched_rules | 匹配的规则 ID 列表 |
+| `explanations` | explain_matched_rules() | RuleExplanation 列表 |
+| `readable_summary` | 自动生成 | 可读摘要（基于 decision + risk_level + category + rationale，不硬编码 task_type） |
+| `suggestions` | GateResult.suggestions | 建议列表 |
+| `risk_summary` | 自动生成 | 风险等级摘要（取最高风险：high > medium > low） |
+
+### 可读摘要规则
+- **无匹配**：`未触发治理规则`
+- **单规则**：`触发{decision}（{risk_level}/{category}）：{rationale}`
+- **多规则**：`触发{decision}（{最高风险}，{数量}条规则）：{categories}`
+
+### 风险摘要规则
+- 有 `high` → `高风险规则触发`
+- 否则有 `medium` → `中风险规则触发`
+- 否则有 `low` → `低风险规则触发`
+- 无匹配 → `未触发风险规则`
+
+### 价值体现
+- **解释信息真正出现在运行结果旁边**：不再只是"可调用 helper"，而是完整的输出包
+- **调试友好**：可读摘要 + 风险摘要 + 完整解释结构，便于日志记录和调试输出
+- **下游消费基础**：为未来接入 Memory/管理台提供标准格式
+- **语义闭环**：完成从"可调用 helper"到"真实输出面"的转化
+
+### 使用示例
+```python
+result = engine.process_event(raw_event)
+bundle = bundle_explanations(
+    decision=result.decision,
+    matched_rule_ids=result.matched_rules,  # 直接从 GateResult 来
+    schema_rules_lookup={r.id: r for r in schema.rules},
+    suggestions=result.suggestions,
+)
+
+print(bundle.readable_summary)
+# "触发阻断（high/separation_of_duties）：防止审查者与执行者同一人，确保独立审查"
+print(bundle.risk_summary)
+# "高风险规则触发"
+```
+
+### 风险/偏差
+- 无（完全外围 helper，不影响核心决策链）
+
+---
