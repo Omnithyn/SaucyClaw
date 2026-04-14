@@ -210,11 +210,11 @@ bridge.disable_shadow_mode()
 |------|---------------|-------------------|------|
 | bridge=None | False | False | 无桥接器 |
 | bridge 关闭 | False | False | 有桥接器但未开启 |
-| bridge 开启 | True | True（有规则时） | 有解释输出 |
+| bridge 开启 | True | True | 总会生成 explanation_bundle |
 
 - `shadow_mode`：bridge 侧状态，表示桥接器是否处于开启
-- `has_explanation`：结果侧状态，表示本次运行是否真的生成了 explanation
-- 两者不等价：bridge 开启但无规则触发时，`shadow_mode=True` 但 `has_explanation=False`
+- `has_explanation`：结果侧状态，表示本次运行是否生成了 explanation_bundle
+- 两者不等价：`has_explanation` 仅看结果中是否有 bundle，不关心 bundle 内是否有实际解释项。bridge 开启但无规则触发时，`shadow_mode=True` 且 `has_explanation=True`（bundle 存在但 explanations 为空）
 
 ### 不改变核心契约
 

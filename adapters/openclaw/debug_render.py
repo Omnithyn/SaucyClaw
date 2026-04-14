@@ -65,8 +65,6 @@ def render_shadow_run(
 
     # ── Write Back ──
     lines.append("── Write Back " + "─" * 40)
-    log = run_result._write_back_log if hasattr(run_result, "_write_back_log") else None
-    # write_back_log 实际记录在 adapter 侧，这里用 gate_result 推导最小展示
     gate = run_result.gate_result
     rule_count = len(gate.matched_rules)
     risk_text = trace.severity if trace.severity else "无"

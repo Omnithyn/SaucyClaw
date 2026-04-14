@@ -523,3 +523,38 @@ print(bundle.risk_summary)
 
 ### 风险/偏差
 - 当前仍为 mock adapter，真实 OpenClaw hook 接入需后续完成
+
+---
+
+## M2 — 真实宿主接入准备包
+
+状态：**已完成**
+
+### 概述
+
+将 M1 接入包收口为"接真实宿主之前必须知道、必须验证、必须说明"的准备材料，
+不开发新功能，只补齐偏差修正与准备文档。
+
+### 完成内容
+
+#### 偏差修正
+- [x] `docs/integration/openclaw_shadow_runtime.md` — 修正 `has_explanation` 表述偏差
+  （bridge 开启但无规则时 `has_explanation=True`，不是 False）
+- [x] `adapters/openclaw/debug_render.py` — 删除死代码（未使用的 log 变量）
+
+#### 新增文档
+- [x] `docs/integration/openclaw_real_runtime_readiness.md` — 真实宿主接入准备文档，
+  回答"如果下周开始接真实 OpenClaw，哪些能直接用、哪些不能、先做什么后做什么"
+- [x] `docs/integration/runtime_integration_matrix.md` — 接入能力矩阵，
+  表格化说明每项能力的当前状态、可复用性、依赖情况、差距
+- [x] `docs/integration/smoke_checklist.md` — 最小 smoke 验证清单，
+  包含一键验证命令、bridge 开启/关闭区分方法、Block/Allow 路径验证脚本
+
+### 保证
+- **零 core 改动**
+- **零 adapter 契约改动**
+- **零真实 hook 接入**
+- **零新功能开发**
+
+### 风险/偏差
+- 无
