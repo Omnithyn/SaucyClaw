@@ -67,6 +67,11 @@ class ExplainBridge:
         """关闭 Shadow Mode。"""
         self._enabled = False
 
+    @property
+    def enabled(self) -> bool:
+        """返回当前 Shadow Mode 是否开启。"""
+        return self._enabled
+
     def enhance_output(self, result: GateResult) -> AdapterExplainOutput:
         """增强输出，附加解释信息。
 
