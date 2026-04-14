@@ -1,8 +1,7 @@
 <h1 align="center">🦞 SaucyClaw </h1>
 
-> A governance-first agent hardness engineering project baseline.  
-> 一个围绕 **强团队、强约束、强评测、强迁移** 构建的智能体 hardness engineering 基线工程。
-
+> A multi-agent governance harness with ontology, evidence, and explainable rules.
+> 一个以**本体、证据、治理规则**为核心的多智能体治理 Harness，提供可配置、可解释、可验证、可进化的治理能力。
 <p align="left">
   <img alt="Agent Hardness Engineering" src="https://img.shields.io/badge/agent-hardness%20engineering-blue">
   <img alt="Governance First" src="https://img.shields.io/badge/governance-first-orange">
@@ -10,42 +9,27 @@
   <img alt="OpenClaw Compatible" src="https://img.shields.io/badge/OpenClaw-compatible-purple">
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue" alt="MIT License"></a>
 </p>
-
 ---
 
-## Why SaucyClaw
+## 一、项目定位
 
-很多多智能体项目的问题，不是“模型不够强”，而是团队工程不够硬：
+### 一句话定义
 
-- 收到任务后多个角色同时开工
-- 没有唯一 owner
-- specialist 抢答并直接对外交付
-- 没有 handoff、review、评测与回归
-- 角色规则只存在于上下文里，难以长期复用
-- 一旦换到别的工具链，原有方法就散掉
+**SaucyClaw = 一个以本体、证据、治理规则为核心的多智能体治理 Harness，能够插入多种智能体运行时，提供可配置、可解释、可验证、可进化的治理能力。**
 
-**SaucyClaw** 的目标，就是把这件事做成一套可复制、可约束、可评测、可迁移的工程基线。
+### 它是什么
 
-它不是新的 agent runtime，也不是只服务某一个工具。  
-它更像一个 **agent hardness engineering 项目骨架 + 团队治理方法库 + 评测与回归工作面**。
+SaucyClaw 是一个**多智能体治理系统**，核心包括：
 
----
+- **治理规则引擎**：基于 YAML 的规则定义、动态加载、条件匹配
+- **本体建模**：角色、任务类型、约束的结构化定义
+- **证据与记忆**：执行记录沉淀、教训积累、经验复用
+- **解释能力**：运行时可解释、可追溯、可验证
+- **宿主桥接层**：可插拔的 adapter 体系，支持多种 runtime
 
-## What It Is
+SaucyClaw **不替代**智能体运行时（如 OpenHarness），也不做终端应用（如 Hermes），而是为它们提供**治理能力**。
 
-SaucyClaw 是一个通用的 agent hardness engineering 基线工程，核心内容包括：
-
-- 以 `AGENTS.md` 为中心的角色设定
-- General Manager 主导的先判断后调度机制
-- Reviewer / Evaluator / Policy Guardian 等角色分工
-- handoff / review / task contract 模板
-- evals / rubrics / scenarios / reports 工作面
-- Shell / Python 工具骨架
-- 面向 OpenClaw、Codex、Claude 等场景的入口层
-
----
-
-## What It Is Not
+### 它不是什么
 
 SaucyClaw **不是**：
 
@@ -55,124 +39,184 @@ SaucyClaw **不是**：
 - 一个只绑定 OpenClaw 的专属仓库
 - 一个只讲 prompt 技巧、不讲团队工程的样板
 
+### 与相邻项目的定位差异
+
+| 维度 | Hermes Agent | OpenHarness | SaucyClaw |
+|------|-------------|-------------|-----------|
+| **本质** | 终端应用（TUI + 多平台） | 智能体运行时框架 | 多智能体治理 Harness |
+| **解决什么** | 让 LLM 成为日常生产力工具 | 提供可运行的 AI 智能体基础设施 | 让多智能体协作有序且持续进化 |
+| **关键词** | 自改进、多平台、记忆 | 引擎、工具、技能、权限 | 角色边界、本体模型、证据沉淀、解释验证 |
+| **类比** | 智能助手汽车 | 智能体发动机工厂 | 交通规则 + 驾照考试 + 经验积累 |
+
 ---
 
-## Core Model
+## 二、核心架构
 
-SaucyClaw 采用如下组织模型：
+### 四层一体的体系
 
-```text
-CEO / Human Decision Maker
-        ↓
-General Manager
-        ↓
-Specialists ── Reviewer
-        ↓          ↓
-   Evaluator / Policy Guardian
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    平台化演进层（未来）                        │
+│  - 可视化编辑器                                              │
+│  - 治理资产库                                                │
+│  - 跨 runtime 迁移                                           │
+├─────────────────────────────────────────────────────────────┤
+│                    宿主桥接层（进行中）                        │
+│  - OpenClaw adapter                                          │
+│  - OpenHarness adapter (TODO)                               │
+│  - Hermes adapter (TODO)                                    │
+│  - ExplainBridge（Shadow Mode）                             │
+├─────────────────────────────────────────────────────────────┤
+│                    解释与证据层（已完成）                      │
+│  - 解释能力（explain_matched_rules）                        │
+│  - 解释输出包（ExplanationBundle）                          │
+│  - 证据生成（EvidenceGenerator）                            │
+│  - 记忆沉淀（MemoryBuilder）                                │
+├─────────────────────────────────────────────────────────────┤
+│                    治理内核层（已完成）                        │
+│  - 规则加载（load_governance）                              │
+│  - 规则匹配（match_rules + applies_when）                   │
+│  - 本体模型（Role/TaskType/GovernanceRule）                │
+│  - 引擎编排（GovernanceEngine）                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-- **CEO / Human Decision Maker** 是外部角色，不是内部 agent
-- **General Manager** 是系统中的实际总控
-- **Specialists** 负责阶段性交付
-- **Reviewer** 负责质量审查，不代写
-- **Evaluator** 负责评测、回放、回归判断
-- **Policy Guardian** 负责约束提醒与边界检查
+### 治理闭环
+
+```
+规则定义 → 引擎处理 → 证据生成 → 记忆沉淀 → 解释输出 → 回归验证 → 规则演进
+```
+
+### 核心数据流
+
+```
+raw_event
+  → NormalizedEvent (events/normalizer.py)
+  → match_rules() (governance/matcher.py)
+  → GateResult (decision + matched_rules)
+  → EvidenceGenerator (evidence/generator.py)
+  → MemoryBuilder (engine/memory_builder.py)
+  → FileEvidenceStore / FileMemoryStore (stores/file/*)
+  → OpenClawHostAdapter.write_back() (adapters/openclaw/adapter.py)
+  → ExplainBridge.enhance_output() (adapters/openclaw/explain_bridge.py)
+  → ExplanationBundle (governance/explainer_bundle.py)
+```
 
 ---
 
-## Key Ideas
+## 三、当前能力
 
-### 1. 先判断，再决定是否调度
+### 治理内核（已完成）
 
-General Manager 的默认第一动作不是派单，而是先做 **任务处理判断**。
+- ✅ **规则定义**：YAML 驱动的治理规则（conditions + applies_when + metadata）
+- ✅ **规则匹配**：两段式评估（先判适用，再判合规）
+- ✅ **本体模型**：5 种角色（developer/specialist/reviewer/manager/orchestrator）+ 5 类任务（A-E）
+- ✅ **规则元数据**：category / source / rationale / risk_level
+- ✅ **引擎编排**：事件 → 匹配 → 证据 → 记忆的完整流程
+- ✅ **回归验证**：136+ 单元测试 + 6 个场景 fixture
 
-### 2. 多智能体不是默认动作
+### 解释与证据层（已完成）
 
-多角色协作是升级动作，不是默认动作。能单人闭环，就不多人协作。
+- ✅ **运行时解释**：`explain_matched_rules()` 生成结构化解释
+- ✅ **解释输出包**：`ExplanationBundle` 包含 readable_summary / risk_summary / suggestions
+- ✅ **Shadow Mode**：`ExplainBridge` 独立桥接，不改变 adapter 契约
+- ✅ **证据生成**：违规时自动生成 Evidence 记录
+- ✅ **记忆沉淀**：Block / Allow / Escalate 三类 MemoryRecord
 
-### 3. 角色要强，但不能越界
+### 宿主桥接层（基础架构）
 
-SaucyClaw 强调：
-
-- specialist 默认待命
-- reviewer 只审不代写
-- evaluator 不替代交付
-- policy guardian 不替代总控
-
-### 4. 团队不仅要能做事，还要能被验证
-
-项目不仅关注交付，也关注：
-
-- smoke tasks
-- replay scenarios
-- rubrics
-- reports
-- regression checks
-
-### 5. 方法优先，工具其次
-
-SaucyClaw 会兼容 OpenClaw，但不把自身限制为 OpenClaw 专属骨架。
+- ✅ **Mock Adapter**：`OpenClawHostAdapter`（intercept_output + write_back）
+- ✅ **ExplainBridge**：解释能力接入 adapter 边界
+- ⏳ **真实 hook 接入**：待对接真实 OpenClaw 运行时（Phase 2.2）
+- ⏳ **多 runtime 支持**：待实现 OpenHarness / Hermes adapter
 
 ---
 
-## Project Structure
+## 四、术语表
+
+| 术语 | 定义 |
+|------|------|
+| **治理规则**（GovernanceRule） | YAML 定义的规则，包含 conditions / applies_when / metadata |
+| **本体模型** | 角色、任务类型、约束的结构化定义（RoleDefinition / TaskType） |
+| **证据**（Evidence） | 违规执行的记录，包含事件、规则、时间戳 |
+| **记忆**（Memory） | 任务执行的教训沉淀，包含 success/failure/lesson |
+| **解释能力** | 运行时生成结构化解释（category/risk/source/rationale） |
+| **解释输出包**（ExplanationBundle） | 完整的解释输出，包含 readable_summary / risk_summary |
+| **宿主桥接**（Host Adapter） | 连接 SaucyClaw 与外部 runtime 的适配器（如 OpenClawHostAdapter） |
+| **治理 Harness** | 可插拔、可配置、可迁移的治理能力体系 |
+
+---
+
+## 五、项目结构
 
 ```text
 SaucyClaw/
-├── README.md
-├── AGENTS.md
-├── CLAUDE.md
-├── docs/
-├── system/
-├── agents/
-├── evals/
-├── templates/
-├── examples/
-├── scripts/
-├── tools/
-├── focus/
-├── plaza/
-└── demo/
+├── core/                          # 治理内核
+│   ├── governance/                # 规则引擎（models/matcher/loader/explainer）
+│   ├── events/                    # 事件标准化
+│   ├── evidence/                  # 证据生成
+│   ├── engine/                    # 引擎编排
+│   └── meta_model/                # 元模型
+├── stores/                        # 存储层
+│   ├── file/                      # 文件存储（evidence/memory）
+│   └── protocols.py               # 存储协议
+├── adapters/                      # 宿主桥接层
+│   └── openclaw/                  # OpenClaw 适配器 + ExplainBridge
+├── schemas/                       # 本体定义
+│   └── governance/                # rules.yaml / roles.yaml / task_types.yaml
+├── tests/                         # 测试
+│   ├── unit/                      # 单元测试
+│   └── integration/               # 集成测试
+├── docs/                          # 文档
+│   └── phase/                     # 阶段文档
+└── README.md                      # 本文件
 ```
 
 ---
 
-## Recommended Reading Order
+## 六、推荐阅读顺序
 
 第一次进入仓库，建议按以下顺序阅读：
 
-1. `README.md`
-2. `AGENTS.md`
-3. `CLAUDE.md`
-4. `system/SYSTEM_SPEC.md`
-5. `system/HARDNESS_ENGINEERING.md`
-6. `agents/general-manager/AGENTS.md`
-7. `evals/README.md`
-8. `templates/`
+1. `README.md`（本文件）
+2. `docs/phase/project_alignment_report.md`（项目对齐报告）
+3. `system/SYSTEM_SPEC.md`（系统规范）
+4. `core/governance/models.py`（治理模型）
+5. `core/governance/matcher.py`（规则匹配器）
+6. `core/governance/explainer_bundle.py`（解释输出包）
+7. `adapters/openclaw/explain_bridge.py`（解释桥接器）
+8. `tests/integration/test_governance_fixtures.py`（回归测试）
 
 > 语义裁决说明：若入口文件表达存在差异，以 `system/SYSTEM_SPEC.md` 为准。
 
 ---
 
-## Use Cases
+## 七、使用场景
 
 SaucyClaw 适合：
 
 - 构建强大且受约束的 agent 团队
 - 设计可回放、可比较、可回归的团队评测体系
-- 作为 OpenClaw、Codex、Claude 等场景下的治理基线
+- 作为 OpenClaw、OpenHarness、Hermes 等场景下的治理基线
 - 作为角色模板、流程模板、评测模板的统一底座
+- 治理规则的可配置化、可视化、资产化
 
 ---
 
-## Current Direction
+## 八、当前方向
 
-当前阶段，SaucyClaw 正在从 “OpenClaw-friendly 多智能体骨架” 继续演进为 “通用 agent hardness engineering 基线”。
+当前阶段，SaucyClaw 已完成**治理内核**和**解释与证据层**的核心能力，正在推进**宿主桥接层**的完善，并规划**平台化演进层**的启动。
 
-这意味着项目会持续补强：
+这意味着项目将持续补强：
 
-- 系统级 hardness 文档
-- 角色约束与职责分层
-- 评测与回归资产
-- 可迁移性与映射说明
-- 主文件的 V2 改写与收敛
+- 多 runtime adapter 体系
+- 治理规则的动态加载与热更新
+- 可视化编辑器与治理资产库
+- 跨 runtime 的治理能力迁移
+- 治理规则的自适应优化
+
+---
+
+## 九、许可
+
+MIT License
