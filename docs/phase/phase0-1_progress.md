@@ -352,3 +352,37 @@
 - 无
 
 ---
+
+## Phase 1.8 — 规则元数据运行时解释能力
+
+状态：已完成
+
+### 完成内容
+- [x] `core/governance/explainer.py` — 解释构造器，包含：
+  - `RuleExplanation` dataclass（rule_id, category, risk_level, source, rationale）
+  - `explain_matched_rules()`：将 `matched_rules` 转换为结构化解释列表
+- [x] `tests/unit/test_governance_explainer.py` — 5 个单元测试：
+  - `test_explain_single_matched_rule`：单规则解释
+  - `test_explain_multiple_matched_rules`：多规则解释
+  - `test_explain_no_matched_rules`：无匹配时返回空列表
+  - `test_explain_without_lookup`：不传 lookup 表时的降级行为
+  - `test_explanation_fields_completeness`：验证所有字段完整非空
+- [x] `tests/unit/test_governance_alignment.py` — 补上 `test_source_roundtrip`，闭合 Phase 1.7 的小缺口
+- [x] 144 tests 全部通过（+6 新测试），pyflakes 零报错
+
+### 设计原则
+- **独立 helper**：explainer 是纯函数，不修改 `matcher.py` / `engine.py`
+- **保持克制**：未修改 `GateResult` 结构，避免过度设计
+- **向后兼容**：所有解释字段非空（Phase 1.7 已保证元数据完整）
+- **按需扩展**：lookup 表可选，支持未来补充额外信息
+
+### 解释能力价值
+- **运行时可用**：匹配规则时可即时获取结构化解释，而非仅规则 ID
+- **调试友好**：解释包含分类、风险、来源、理由，便于定位问题
+- **下游消费基础**：为后续 Memory summary 增强、debug 输出、管理台解释打下基础
+- **语义闭环**：Phase 1.7 的元数据真正浮出到运行时，完成"静态→动态"转化
+
+### 风险/偏差
+- 无（保持克制，未侵入核心逻辑）
+
+---
