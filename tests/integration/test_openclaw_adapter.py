@@ -11,8 +11,7 @@ import yaml
 
 from adapters.openclaw.adapter import OpenClawHostAdapter
 from core.engine.orchestrator import GovernanceEngine
-from core.governance.loader import load_rules
-from core.governance.models import GovernanceRule
+from core.governance.loader import load_governance, load_rules
 from stores.file.evidence.store import FileEvidenceStore
 from stores.file.memory.store import FileMemoryStore
 
@@ -20,6 +19,8 @@ from stores.file.memory.store import FileMemoryStore
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+from core.governance.models import GovernanceRule
 
 SCHEMAS_DIR = Path(__file__).parent.parent.parent / "schemas" / "governance"
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
@@ -165,3 +166,31 @@ class TestAdapterCapabilities:
         assert event.event_type == "task_run"
         assert event.session_id == "s1"
         assert event.payload.get("assignee") == "dev"
+
+
+# ---------------------------------------------------------------------------
+# 全量 schema 加载集成测试
+# ---------------------------------------------------------------------------
+
+class TestFullSchemaIntegration:
+    def test_load_governance_as_entry_point(self, tmp_path):
+        """集成测试应能直接用 load_governance() 作为系统入口。"""
+        schema = load_governance(SCHEMAS_DIR)
+
+        engine, _, memory_store = _make_engine(tmp_path, schema.rules)
+
+        fixture_path = FIXTURES_DIR / "block_input.yaml"
+        with open(fixture_path) as f:
+            fixture = yaml.safe_load(f)
+
+        result = engine.process_event(fixture)
+        assert result.decision == "Block"
+        assert "rule-reviewer-must-differ" in result.matched_rules
+
+        # 验证 schema.roles / schema.task_types 也可用
+        role_ids = {r.id for r in schema.roles}
+        assert "specialist" in role_ids
+        assert "reviewer" in role_ids
+
+        task_ids = {t.id for t in schema.task_types}
+        assert "C" in task_ids

@@ -25,6 +25,7 @@ class RoleDefinition:
     """智能体角色定义。"""
     id: str
     name: str
+    description: str = ""
     capabilities: list[str] = field(default_factory=list)
     permissions: dict = field(default_factory=dict)
     handoff_to: list[str] = field(default_factory=list)
@@ -38,6 +39,7 @@ class TaskType:
     description: str
     required_roles: list[str] = field(default_factory=list)
     review_required: bool = False
+    allowed_roles: list[str] = field(default_factory=list)
     blocking_rules: list[str] = field(default_factory=list)
 
 

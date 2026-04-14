@@ -249,3 +249,29 @@
 
 ### 风险/偏差
 - 无
+
+---
+
+## Phase 1.5 — 治理 schema 与运行模型对齐
+
+状态：已完成
+
+### 完成内容
+- [x] `core/governance/models.py` — `TaskType` 补上 `allowed_roles` 字段；`RoleDefinition` 补上 `description`
+- [x] `core/governance/loader.py` — `load_task_types()` 补装 `allowed_roles`；`load_roles()` 补装 `description`
+- [x] `tests/unit/test_governance_alignment.py` — 契约一致性测试（14 个）：
+  - YAML 字段 → dataclass 字段完整映射检查
+  - C 类 allowed_roles 加载确认
+  - specialist can_output_to_ceo 权限确认
+  - applies_when 有无规则加载确认
+  - blocking_rules 引用完整性检查
+  - load_governance() 作为系统入口的集成验证
+- [x] `tests/integration/test_openclaw_adapter.py` — 新增 `TestFullSchemaIntegration` 使用 `load_governance()` 作为入口
+- [x] 129 tests 全部通过，pyflakes 零报错
+
+### 对齐过程中发现的漏斗
+- `TaskType` 缺 `allowed_roles` — 已补
+- `RoleDefinition` 缺 `description` — 已补
+
+### 风险/偏差
+- 无

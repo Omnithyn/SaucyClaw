@@ -80,6 +80,7 @@ def load_roles(path: str | Path) -> list[RoleDefinition]:
         roles.append(RoleDefinition(
             id=item["id"],
             name=item["name"],
+            description=item.get("description", ""),
             capabilities=item.get("capabilities", []),
             permissions=item.get("permissions", {}),
             handoff_to=item.get("handoff_to", []),
@@ -107,6 +108,7 @@ def load_task_types(path: str | Path) -> list[TaskType]:
             description=item.get("description", ""),
             required_roles=item.get("required_roles", []),
             review_required=item.get("review_required", False),
+            allowed_roles=item.get("allowed_roles", []),
             blocking_rules=item.get("blocking_rules", []),
         ))
     return types
