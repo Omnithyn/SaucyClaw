@@ -1,4 +1,4 @@
-# Phase 0-1 实施进度
+# Phase 0-1 実施進度
 
 > 创建时间：2026-04-12
 > 规则：每完成一个提交，更新此文件
@@ -12,8 +12,8 @@
 ### 完成内容
 - [x] `docs/phase/phase0-1_status.md` — 阶段状态基线
 - [x] `docs/phase/phase0-1_repo_baseline.md` — 仓库基线报告
-- [x] `docs/phase/phase0-1_implementation_plan.md` — 实施蓝图
-- [x] `docs/phase/open_questions.md` — 未决问题清单
+- [x] `docs/phase/phase0-1_implementation_plan.md` — 実施蓝图
+- [x] `docs/phase/open_questions.md` — 未決问题清单
 - [x] `docs/phase/phase0-1_progress.md` — 本文件
 - [x] `docs/adr/ADR-0001-phase0-1-scope.md`
 - [x] `docs/adr/ADR-0002-minimal-interfaces.md`
@@ -99,7 +99,7 @@
 - 无
 
 ### 风险/偏差
-- 无（OQ-001/002/004 已决，见 ADR-0004）
+- 无（OQ-001/002/004 已決，见 ADR-0004）
 
 ---
 
@@ -115,7 +115,7 @@
 - 无（Phase 1.1 已接入主流程）
 
 ### 风险/偏差
-- 无（OQ-001/002/004 已决，见 ADR-0004）
+- 无（OQ-001/002/004 已決，见 ADR-0004）
 
 ---
 
@@ -128,28 +128,28 @@
 - [x] 集成测试（Block + Allow，使用真实 YAML 规则）
 
 ### 未完成
-- OpenClawHostAdapter.intercept_output 仅为占位实现，真实 hook 尚未接入
+- OpenClawHostAdapter.intercept_output 仅为占位実现，真实 hook 尚未接入
 
 ### 风险/偏差
-- 无（OQ-003 已决，见 ADR-0004）
+- 无（OQ-003 已決，见 ADR-0004）
 
 ---
 
-## Phase 0-1 实施口径说明（PR 评审后补充）
+## Phase 0-1 実施口径说明（PR 评审后补充）
 
 > 以下条目来自 PR #8 评审，用于锁定"代码真相"与文档的一致点。
 
-### Memory 状态
-- **已完成**：MemoryStore 接口 + FileMemoryStore 默认实现
+### Memory 状態
+- **已完成**：MemoryStore 接口 + FileMemoryStore 默認実現
 - **已完成**（Phase 1.1）：治理流程中的记忆沉淀接入
 
 ### Allow 证据策略
 - Allow 场景（无规则触发）**不生成 evidence**
-- 只有规则触发（违规）时才生成 Evidence 记录
+- 只有规则触发（違規）时才生成 Evidence 记录
 
 ### 语义修正
 - `Evidence.governance_version` 在 Phase 0-1 固定为 `None`，留待上层注入
-- `match_rules()` 返回的是**违规触发**的规则列表（条件不满足 = 违规），非"条件匹配"的规则
+- `match_rules()` 返回的是**違規触发**的规则列表（条件不满足 = 違規），非"条件匹配"的规则
 
 ---
 
@@ -158,10 +158,10 @@
 状态：已完成
 
 ### 完成内容
-- [x] `core/engine/memory_builder.py` — MemoryRecord 模板化构造器
+- [x] `core/engine/memory_builder.py` — MemoryRecord 模板化構造器
 - [x] GovernanceEngine 在决策后写入 MemoryRecord（Block 和 Allow 都写）
 - [x] 单元测试（10 tests，覆盖 violation/pass/review 类型）
-- [x] 集成测试更新（验证 memory 中可查到对应记录）
+- [x] 集成测试更新（验证 memory 中可査到对应记录）
 
 ### 记忆规则
 - 有触发规则 → type="violation"
@@ -173,7 +173,7 @@
 
 ---
 
-## Phase 1.2 — 规则扩展与治理语义充实
+## Phase 1.2 — 规则扩展与治理语义充実
 
 状态：已完成
 
@@ -190,16 +190,16 @@
 - [x] 集成测试 fixtures 更新（allow_input.yaml 和 block_input.yaml 补充 compliance 字段）
 
 ### 规则条件设计原则
-- 所有规则条件采用**合规检查风格**：条件通过 = 状态合规，条件不通过 = 违规触发
+- 所有规则条件采用**合规检查风格**：条件通过 = 状態合规，条件不通过 = 違規触发
 - 这与 `evaluate_rule()` 和 `match_rules()` 的现有语义保持一致：
   - `evaluate_rule()` 返回 True = 条件全部通过 = 合规
-  - `match_rules()` 返回 `evaluate_rule()` 为 False 的规则 = 违规
+  - `match_rules()` 返回 `evaluate_rule()` 为 False 的规则 = 違規
 - 固有限制：AND-only 匹配器无法表达 "NOT (A AND B)" 的条件性适用规则，
-  因此每条规则只用单个核心合规条件，角色/任务类型限定由 routing 层保证
+  因此每条规则只用单个核心合规条件，角色/任务类型限由 routing 层保证
 
 ### 风险/偏差
-- AND-only 匹配器限制了条件性规则的表达能力（如需 "仅当 task_type=D 时检查 handoff"），
-  后续如需支持，可引入 OR/NOT 操作符或条件嵌套
+- AND-only 匹配器限了条件性规则的表达能力（如需 "仅当 task_type=D 时検査 handoff"），
+  后续如需支持，可引入 OR/NOT 操符或条件嵌套
 
 ---
 
@@ -213,13 +213,13 @@
 - [x] `schemas/governance/rules.yaml` — 2 条规则迁移到 `applies_when`：
   - `rule-specialist-not-direct-output`: applies_when `assignee in [specialist, developer]`
   - `rule-handoff-required`: applies_when `task_type == "D"`
-- [x] `tests/integration/test_openclaw_adapter.py` — YAML 加载器适配 `applies_when` 解析
-- [x] `tests/unit/test_governance_matcher.py` — 5 个新场景（适用/不适用/违规/合规）
+- [x] `tests/integration/test_openclaw_adapter.py` — YAML 装载器适配 `applies_when` 解析
+- [x] `tests/unit/test_governance_matcher.py` — 5 个新场景（适用/不适用/違規/合规）
 - [x] 101 tests 全部通过，pyflakes 零报错
 
 ### applies_when 语义
-- applies_when 不满足 → 规则不适用 → `evaluate_rule()` 返回 True（不违规）
-- applies_when 满足 → 再 eval conditions，决定合规/违规
+- applies_when 不满足 → 规则不适用 → `evaluate_rule()` 返回 True（不違規）
+- applies_when 满足 → 再 eval conditions，决定合规/違規
 - applies_when 与 conditions 一样，Phase 1.3 保持 AND-only，不支持 OR/NOT/分组
 
 ### 风险/偏差
@@ -261,9 +261,9 @@
 - [x] `core/governance/loader.py` — `load_task_types()` 补装 `allowed_roles`；`load_roles()` 补装 `description`
 - [x] `tests/unit/test_governance_alignment.py` — 契约一致性测试（14 个）：
   - YAML 字段 → dataclass 字段完整映射检查
-  - C 类 allowed_roles 加载确认
-  - specialist can_output_to_ceo 权限确认
-  - applies_when 有无规则加载确认
+  - C 类 allowed_roles 加载確認
+  - specialist can_output_to_ceo 权限確認
+  - applies_when 有无规则加载確認
   - blocking_rules 引用完整性检查
   - load_governance() 作为系统入口的集成验证
 - [x] `tests/integration/test_openclaw_adapter.py` — 新增 `TestFullSchemaIntegration` 使用 `load_governance()` 作为入口
@@ -275,3 +275,38 @@
 
 ### 风险/偏差
 - 无
+
+---
+
+## Phase 1.6 — 治理规则集的批量 YAML 驱动集成验证
+
+状态：已完成
+
+### 完成内容
+- [x] `tests/fixtures/governance_cases/` — 6 个场景 fixture：
+  - `block_reviewer_same_as_assignee.yaml`
+  - `block_specialist_direct_output.yaml`
+  - `allow_specialist_via_reviewer.yaml`
+  - `block_d_without_handoff.yaml`
+  - `block_a_wrong_assignee.yaml`
+  - `escalate_on_conflict.yaml`
+- [x] `tests/integration/test_governance_fixtures.py` — 场景驱动批量回归测试：
+  - 自动发现所有 governance_cases/*.yaml
+  - 每个 fixture 验证 `expected.decision` 和 `expected.matched_rules`
+  - 所有场景一次性跑通，支持规则集扩展与回归验证
+- [x] 136 tests 全部通过，pyflakes 零报错
+
+### 验证结构
+- 每个 fixture 两段：input + expected
+- expected 必填：decision, matched_rules（Allow 时显式写 `[]`）
+- 不依赖文件遍历顺序，按文件名排序
+
+### 边界控制
+- **0 行 core 代码改动**
+- 只新增 fixture 和 1 个集成测试文件
+- 完全复用现有 `load_governance` + `GovernanceEngine`
+
+### 风险/偏差
+- 无
+
+---
