@@ -460,3 +460,80 @@ print(bundle.risk_summary)
 - 无（完全外围 helper，不影响核心决策链）
 
 ---
+
+## Phase 2.0 — 解释输出接入 Adapter 边界（Shadow Mode）
+
+状态：已完成
+
+### 完成内容
+- [x] `adapters/openclaw/explain_bridge.py` — 解释桥接器，包含：
+  - `AdapterExplainOutput` dataclass（decision, matched_rules, explanation_bundle, raw_result）
+  - `ExplainBridge` 桥接器：
+    - `__init__(schema_rules_lookup, enable=False)`：初始化，支持开关
+    - `enable_shadow_mode()` / `disable_shadow_mode()`：运行时切换
+    - `enhance_output(result: GateResult)`：生成桥接输出
+- [x] `tests/unit/test_explain_bridge.py` — 7 个单元测试：
+  - `test_enhance_output_with_bundle`：Shadow Mode 启用时返回 explanation_bundle
+  - `test_enhance_output_without_bundle`：Shadow Mode 关闭时 explanation_bundle 为 None
+  - `test_shadow_mode_toggle`：开关切换有效
+  - `test_adapter_write_back_still_accepts_raw_gate_result`：原 adapter 契约未被破坏
+  - `test_adapter_explain_output_fields_completeness`：字段完整性验证
+  - `test_enhance_output_with_no_matched_rules`：无匹配规则降级
+  - `test_enhance_output_with_unknown_rule_id`：未知 rule_id 降级
+- [x] 159 tests 全部通过（+7 新测试），pyflakes 零报错
+
+### 设计原则
+- **外围桥接**：不修改 `adapter.write_back()` 契约，仍接受 `GateResult`
+- **Shadow Mode**：默认关闭（enable=False），显式开启
+- **伴随输出**：`enhance_output()` 生成额外的解释包，原始 `GateResult` 保持完整
+- **独立文件**：`explain_bridge.py` 与 adapter 同目录，边界清晰
+- **可选使用**：不影响现有流程，只在需要时调用
+
+### 关键设计点
+| 设计决策 | 说明 |
+|----------|------|
+| 不改 `write_back()` | `adapter.write_back(result)` 仍接受 `GateResult`，不返回 dict |
+| `enhance_output()` | 只生成桥接输出，不改变 adapter 行为 |
+| `raw_result` | 保留原始 `GateResult`，供 adapter 使用 |
+| `explanation_bundle` | 可选（None | Bundle），Shadow Mode 开启时才有 |
+| 默认关闭 | `enable=False`，保持最小侵入 |
+
+### 使用示例
+```python
+from adapters.openclaw.explain_bridge import ExplainBridge
+
+# 创建 bridge
+bridge = ExplainBridge(schema_rules_lookup, enable=True)
+
+# 处理事件
+result = engine.process_event(raw_event)
+
+# 生成增强输出（用于调试/日志/旁路展示）
+enhanced = bridge.enhance_output(result)
+
+# 仍然保持原 adapter 行为
+adapter.write_back(result)
+
+# enhanced 用于：
+# - 调试输出
+# - 日志记录
+# - 宿主旁路展示
+# - 后续真实 hook 契约验证
+
+print(enhanced.explanation_bundle.readable_summary)
+# "触发阻断（high/separation_of_duties）：..."
+print(enhanced.explanation_bundle.risk_summary)
+# "高风险规则触发"
+```
+
+### 价值体现
+- **解释信息成为伴随输出**：不再需要每次手工拼接
+- **Adapter 契约保持不变**：`write_back(result)` 仍接受 `GateResult`
+- **调试友好**：`enhanced.explanation_bundle` 可用于调试输出、日志
+- **真实 hook 前的契约验证**：输出结构稳定后，再接入真实 hook
+- **影子集成**：不改变核心逻辑，只提供额外信息
+
+### 风险/偏差
+- 无（完全外围桥接，不影响 adapter 核心契约）
+
+---
