@@ -152,3 +152,23 @@ class TestLoadGovernanceEndToEnd:
                 assert rule_id in rule_ids, (
                     f"task_type {tt.id} 引用了不存在的规则: {rule_id}"
                 )
+
+
+class TestRuleMetadataRoundtrip:
+    """Phase 1.7: 规则元数据 round-trip 验证。"""
+
+    def test_category_roundtrip(self):
+        """验证 category 字段能正确从 YAML 加载。"""
+        schema = load_governance(SCHEMAS_DIR)
+        rule = [r for r in schema.rules if r.id == "rule-reviewer-must-differ"]
+        assert len(rule) == 1
+        assert rule[0].category == "separation_of_duties"
+        assert rule[0].risk_level == "high"
+
+    def test_rationale_roundtrip(self):
+        """验证 rationale 字段能正确从 YAML 加载。"""
+        schema = load_governance(SCHEMAS_DIR)
+        rule = [r for r in schema.rules if r.id == "rule-specialist-not-direct-output"]
+        assert len(rule) == 1
+        assert rule[0].rationale != ""
+        assert "specialist" in rule[0].rationale

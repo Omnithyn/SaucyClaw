@@ -1,6 +1,7 @@
 # 治理本体：规则定义
 # Phase 0-1: 最小规则集（仅 rule-reviewer-must-differ）
 # Phase 1.2: 扩展为 5 条规则，覆盖角色分离、handoff、路由、升级
+# Phase 1.7: 补充元数据（category, source, rationale, risk_level）
 
 rules:
   # 角色分离类
@@ -13,6 +14,10 @@ rules:
         value_from: "reviewer"
     severity: "block"
     on_hit: "Block"
+    category: "separation_of_duties"
+    source: "ORCHESTRATION.md"
+    rationale: "防止审查者与执行者同一人，确保独立审查"
+    risk_level: "high"
 
   # 角色分离类：specialist 不能直接输出给 CEO
   # applies_when: 仅 specialist/developer 适用
@@ -30,6 +35,10 @@ rules:
         value: "false"
     severity: "block"
     on_hit: "Block"
+    category: "routing"
+    source: "SYSTEM_SPEC.md"
+    rationale: "specialist 输出需经审查，防止直接暴露给 CEO"
+    risk_level: "high"
 
   # 任务分流类：D 类任务必须有 handoff 记录才能进入 review
   # applies_when: 仅 D 类任务适用
@@ -47,6 +56,10 @@ rules:
         value: "true"
     severity: "block"
     on_hit: "Block"
+    category: "handoff"
+    source: "ORCHESTRATION.md"
+    rationale: "D 类任务需明确交接记录，确保多阶段协同"
+    risk_level: "medium"
 
   # 消息路由类：A 类任务只能由 manager 或 orchestrator 处理
   # 合规检查：assignee 必须在允许的角色列表中
@@ -63,6 +76,10 @@ rules:
         value: ["manager", "orchestrator"]
     severity: "block"
     on_hit: "Block"
+    category: "routing"
+    source: "MESSAGE_ROUTING.md"
+    rationale: "A 类任务权限隔离，仅允许特定角色处理"
+    risk_level: "medium"
 
   # 升级触发类：冲突方向时必须升级
   # 合规检查：conflict 必须为 "false"（无冲突）
@@ -75,3 +92,7 @@ rules:
         value: "false"
     severity: "block"
     on_hit: "Escalate"
+    category: "escalation"
+    source: "SYSTEM_SPEC.md"
+    rationale: "冲突场景必须升级，防止错误决策扩散"
+    risk_level: "high"

@@ -34,6 +34,8 @@ def load_rules(path: str | Path) -> list[GovernanceRule]:
 
     支持 conditions 与 applies_when 两个条件列表。
     两者均为 AND-only 单层条件。
+
+    Phase 1.7: 支持可选元数据字段。
     """
     raw = _load_yaml(path)
     items = raw.get("rules", [])
@@ -59,6 +61,10 @@ def load_rules(path: str | Path) -> list[GovernanceRule]:
             severity=item["severity"],
             on_hit=item["on_hit"],
             applies_when=applies_when,
+            category=item.get("category", ""),
+            source=item.get("source", ""),
+            rationale=item.get("rationale", ""),
+            risk_level=item.get("risk_level", ""),
         ))
     return rules
 
