@@ -140,7 +140,7 @@
 > 以下条目来自 PR #8 评审，用于锁定"代码真相"与文档的一致点。
 
 ### Memory 状態
-- **已完成**：MemoryStore 接口 + FileMemoryStore 默認実現
+- **已完成**：MemoryStore 接口 + FileMemoryStore 默認実现
 - **已完成**（Phase 1.1）：治理流程中的记忆沉淀接入
 
 ### Allow 证据策略
@@ -294,6 +294,9 @@
   - 自动发现所有 governance_cases/*.yaml
   - 每个 fixture 验证 `expected.decision` 和 `expected.matched_rules`
   - 所有场景一次性跑通，支持规则集扩展与回归验证
+- [x] `rule-restricted-routing` 补上 `applies_when: task_type == "A"`，避免跨 task_type 泄漏
+- [x] `allow_specialist_via_reviewer.yaml` 改回 `assignee: specialist`，真正验证 specialist 正向路径
+- [x] `block_specialist_direct_output.yaml` 移除误触发的 `rule-restricted-routing`
 - [x] 136 tests 全部通过，pyflakes 零报错
 
 ### 验证结构
