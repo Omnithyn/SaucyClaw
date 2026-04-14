@@ -313,3 +313,42 @@
 - 无
 
 ---
+
+## Phase 1.7 — 规则元数据与可解释性增强
+
+状态：已完成
+
+### 完成内容
+- [x] `core/governance/models.py` — `GovernanceRule` 补上 4 个元数据字段：
+  - `category`: 规则分类（separation_of_duties / routing / handoff / escalation）
+  - `source`: 规则来源文档（ORCHESTRATION.md / MESSAGE_ROUTING.md / SYSTEM_SPEC.md）
+  - `rationale`: 规则理由（单行字符串）
+  - `risk_level`: 风险等级（low / medium / high）
+- [x] `core/governance/loader.py` — `load_rules()` 补装 `.get(field, "")`
+- [x] `schemas/governance/rules.yaml` — 所有 5 条规则补全元数据：
+  - `rule-reviewer-must-differ`: separation_of_duties, ORCHESTRATION.md, high
+  - `rule-specialist-not-direct-output`: routing, SYSTEM_SPEC.md, high
+  - `rule-handoff-required`: handoff, ORCHESTRATION.md, medium
+  - `rule-restricted-routing`: routing, MESSAGE_ROUTING.md, medium
+  - `rule-escalate-on-conflict`: escalation, SYSTEM_SPEC.md, high
+- [x] `tests/unit/test_governance_alignment.py` — 新增 `TestRuleMetadataRoundtrip`：
+  - `test_category_roundtrip`: 验证 category 和 risk_level
+  - `test_rationale_roundtrip`: 验证 rationale 非空且包含关键字段
+- [x] 138 tests 全部通过，pyflakes 零报错
+
+### 边界控制
+- **0 行 `matcher.py` / `engine.py` 改动**
+- 元数据不影响执行逻辑，仅增强可解释性
+- 所有字段默认空字符串，保持向后兼容
+
+### 价值
+- 规则分类可过滤、分组、统计
+- 来源文档支持追溯
+- 理由字段支持解释"为什么有这条规则"
+- 风险等级支持区分规则重要程度
+- 为 Memory summary、debug 输出、管理台 / 可视化打基础
+
+### 风险/偏差
+- 无
+
+---
