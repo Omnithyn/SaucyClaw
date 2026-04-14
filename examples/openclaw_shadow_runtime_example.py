@@ -1,6 +1,7 @@
 """Shadow Runtime 接入示例。
 
 Phase 2.3: 演示外部调用方如何使用 SaucyClaw 治理链路。
+Phase 2.6: 统一为 RuntimeTrace + render_shadow_run 调试输出。
 
 运行方式：
     python -m examples.openclaw_shadow_runtime_example
@@ -11,7 +12,7 @@ Phase 2.3: 演示外部调用方如何使用 SaucyClaw 治理链路。
 3. 创建 OpenClawHostAdapter
 4. 创建 ExplainBridge（Shadow Mode）
 5. 创建 ShadowRuntime
-6. process_and_write(raw_event) → 执行并回写
+6. process_and_write(raw_event) → build_runtime_trace → render_shadow_run
 """
 
 from __future__ import annotations
@@ -28,9 +29,12 @@ from core.engine.orchestrator import GovernanceEngine
 from adapters.openclaw.adapter import OpenClawHostAdapter
 from adapters.openclaw.explain_bridge import ExplainBridge
 from adapters.openclaw.shadow_runtime import ShadowRuntime
+from adapters.openclaw.runtime_trace import build_runtime_trace
+from adapters.openclaw.debug_render import render_shadow_run
 from stores.file.evidence.store import FileEvidenceStore
 from stores.file.memory.store import FileMemoryStore
 import tempfile
+import yaml
 
 
 def main() -> None:
@@ -90,8 +94,6 @@ def main() -> None:
         print("   ShadowRuntime 创建完成")
 
         # 7. 执行 Block 场景
-        import yaml
-
         print("\n" + "=" * 60)
         print("6. 执行 Block 场景")
         print("=" * 60)
@@ -100,14 +102,8 @@ def main() -> None:
             block_event = yaml.safe_load(f)
 
         block_result = runtime.process_and_write(block_event)
-        print(f"   决策: {block_result.gate_result.decision}")
-        print(f"   匹配规则: {block_result.gate_result.matched_rules}")
-        print(f"   增强输出: {block_result.enhanced_output is not None}")
-        if block_result.enhanced_output:
-            bundle = block_result.enhanced_output.explanation_bundle
-            if bundle:
-                print(f"   可读摘要: {bundle.readable_summary}")
-                print(f"   风险摘要: {bundle.risk_summary}")
+        block_trace = build_runtime_trace(block_result, bridge=bridge)
+        print(render_shadow_run(block_result, block_trace))
 
         # 8. 执行 Allow 场景
         print("\n" + "=" * 60)
@@ -118,16 +114,10 @@ def main() -> None:
             allow_event = yaml.safe_load(f)
 
         allow_result = runtime.process_and_write(allow_event)
-        print(f"   决策: {allow_result.gate_result.decision}")
-        print(f"   匹配规则: {allow_result.gate_result.matched_rules}")
-        print(f"   增强输出: {allow_result.enhanced_output is not None}")
-        if allow_result.enhanced_output:
-            bundle = allow_result.enhanced_output.explanation_bundle
-            if bundle:
-                print(f"   可读摘要: {bundle.readable_summary}")
-                print(f"   风险摘要: {bundle.risk_summary}")
+        allow_trace = build_runtime_trace(allow_result, bridge=bridge)
+        print(render_shadow_run(allow_result, allow_trace))
 
-        # 9. 验证 Adapter 日志
+        # 9. 验证 Adapter 回写日志
         print("\n" + "=" * 60)
         print("8. 验证 Adapter 回写日志")
         print("=" * 60)
