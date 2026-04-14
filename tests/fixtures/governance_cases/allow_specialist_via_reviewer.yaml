@@ -1,5 +1,5 @@
 task_type: "C"
-assignee: "manager"
+assignee: "specialist"
 reviewer: "reviewer"
 direct_output: "false"
 handoff: "true"

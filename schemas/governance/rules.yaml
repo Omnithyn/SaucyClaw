@@ -53,6 +53,10 @@ rules:
   - id: "rule-restricted-routing"
     task_type: "A"
     description: "A 类任务只能由 manager 或 orchestrator 处理"
+    applies_when:
+      - field: "task_type"
+        op: "=="
+        value: "A"
     conditions:
       - field: "assignee"
         op: "in"

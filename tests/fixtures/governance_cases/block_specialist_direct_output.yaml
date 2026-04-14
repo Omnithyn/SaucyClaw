@@ -10,4 +10,3 @@ expected:
   decision: "Block"
   matched_rules:
     - "rule-specialist-not-direct-output"
-    - "rule-restricted-routing"
