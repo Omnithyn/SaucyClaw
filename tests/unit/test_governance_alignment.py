@@ -172,3 +172,10 @@ class TestRuleMetadataRoundtrip:
         assert len(rule) == 1
         assert rule[0].rationale != ""
         assert "specialist" in rule[0].rationale
+
+    def test_source_roundtrip(self):
+        """Phase 1.8: 验证 source 字段能正确从 YAML 加载。"""
+        schema = load_governance(SCHEMAS_DIR)
+        rule = [r for r in schema.rules if r.id == "rule-restricted-routing"]
+        assert len(rule) == 1
+        assert rule[0].source == "MESSAGE_ROUTING.md"
