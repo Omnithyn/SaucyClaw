@@ -84,6 +84,13 @@ class TestRoleFieldAlignment:
         assert len(specialist) == 1
         assert specialist[0].permissions.get("can_output_to_ceo") is False
 
+    def test_role_description_roundtrip(self):
+        """roles.yaml 中的 description 应能完整进入 RoleDefinition。"""
+        schema = load_governance(SCHEMAS_DIR)
+        specialist = [r for r in schema.roles if r.id == "specialist"]
+        assert len(specialist) == 1
+        assert specialist[0].description == "通用 specialist，不直接对外输出"
+
 
 class TestRuleFieldAlignment:
     def test_all_yaml_fields_in_model(self):
