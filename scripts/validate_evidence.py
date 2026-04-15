@@ -51,6 +51,10 @@ def verify_evidence_consistency(validation_dir: Path) -> bool:
 
     print(f"发现 {len(evidence_files)} 个 evidence 文件:\n")
 
+    # 统计两类证据数量
+    sent_count = 0
+    pre_send_failure_count = 0
+
     for evidence_file in evidence_files:
         scenario = evidence_file.stem.replace("_evidence", "")
 
@@ -81,6 +85,7 @@ def verify_evidence_consistency(validation_dir: Path) -> bool:
             print(f"  类型: pre-send failure")
             print(f"  模式: {mode}, 成功: {success}, 错误: {error}")
             print(f"  说明: 发送前失败，无需 payload 文件")
+            pre_send_failure_count += 1
         else:
             # A. 已发送类证据
             payload_file = validation_dir / f"{scenario}_payload.json"
@@ -107,6 +112,7 @@ def verify_evidence_consistency(validation_dir: Path) -> bool:
                 print(f"  类型: sent evidence")
                 print(f"  模式: {mode}, 成功: {success}, 状态码: {status}")
                 print(f"  payload 与文件一致: {payload_file.name}")
+                sent_count += 1
             else:
                 print(f"✗ {scenario}: payload 不一致!")
                 print(f"  evidence.payload: {list(evidence_payload.keys())}")
@@ -114,6 +120,12 @@ def verify_evidence_consistency(validation_dir: Path) -> bool:
                 all_pass = False
 
         print()
+
+    # 输出统计
+    print(f"证据分类统计:")
+    print(f"  sent evidence: {sent_count}")
+    print(f"  pre-send failure evidence: {pre_send_failure_count}")
+    print()
 
     return all_pass
 
