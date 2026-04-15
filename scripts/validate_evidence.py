@@ -32,7 +32,12 @@ def normalize_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def verify_evidence_consistency(validation_dir: Path) -> bool:
-    """验证 evidence 和 payload 文件的一致性"""
+    """验证 evidence 和 payload 文件的一致性
+
+    区分两类证据：
+    - A. 已发送类：evidence.payload != null，必须有 payload 文件
+    - B. 发送前失败类：evidence.payload == null，可以没有 payload 文件
+    """
     print("\n=== 证据文件验证 ===\n")
 
     all_pass = True
@@ -48,45 +53,65 @@ def verify_evidence_consistency(validation_dir: Path) -> bool:
 
     for evidence_file in evidence_files:
         scenario = evidence_file.stem.replace("_evidence", "")
-        payload_file = validation_dir / f"{scenario}_payload.json"
 
-        # 检查 payload 文件是否存在
-        if not payload_file.exists():
-            print(f"✗ {scenario}: 缺少 {payload_file.name}")
-            all_pass = False
-            continue
-
-        # 加载文件
+        # 加载 evidence 文件
         evidence = load_json(evidence_file)
-        payload = load_json(payload_file)
-
-        if evidence is None or payload is None:
+        if evidence is None:
             all_pass = False
             continue
 
-        # 验证 evidence 中包含 payload 字段
-        if "payload" not in evidence:
-            print(f"✗ {scenario}: evidence 缺少 payload 字段")
-            all_pass = False
-            continue
+        # 验证 evidence 中包含必需字段
+        required_fields = ["scenario", "mode", "timestamp", "success"]
+        for field in required_fields:
+            if field not in evidence:
+                print(f"✗ {scenario}: evidence 缺少必需字段 '{field}'")
+                all_pass = False
+                continue
 
-        # 比较 payload 一致性（去除 timestamp）
-        evidence_payload = normalize_payload(evidence["payload"])
-        file_payload = normalize_payload(payload)
+        # 区分两类证据
+        payload_value = evidence.get("payload")
+        is_pre_send_failure = payload_value is None
 
-        if evidence_payload == file_payload:
-            print(f"✓ {scenario}: evidence.payload == {payload_file.name}")
-
-            # 显示关键信息
+        if is_pre_send_failure:
+            # B. 发送前失败类证据
+            print(f"✓ {scenario}: pre-send failure (payload=null)")
             mode = evidence.get("mode", "unknown")
             success = evidence.get("success", False)
-            status = evidence.get("status_code", "N/A")
-            print(f"  模式: {mode}, 成功: {success}, 状态码: {status}")
+            error = evidence.get("error", "N/A")
+            print(f"  类型: pre-send failure")
+            print(f"  模式: {mode}, 成功: {success}, 错误: {error}")
+            print(f"  说明: 发送前失败，无需 payload 文件")
         else:
-            print(f"✗ {scenario}: payload 不一致!")
-            print(f"  evidence.payload: {list(evidence_payload.keys())}")
-            print(f"  {payload_file.name}: {list(file_payload.keys())}")
-            all_pass = False
+            # A. 已发送类证据
+            payload_file = validation_dir / f"{scenario}_payload.json"
+
+            if not payload_file.exists():
+                print(f"✗ {scenario}: 已发送类证据缺少 payload 文件")
+                all_pass = False
+                continue
+
+            payload = load_json(payload_file)
+            if payload is None:
+                all_pass = False
+                continue
+
+            # 比较 payload 一致性（去除 timestamp）
+            evidence_payload = normalize_payload(payload_value)
+            file_payload = normalize_payload(payload)
+
+            if evidence_payload == file_payload:
+                print(f"✓ {scenario}: sent evidence (payload 存在)")
+                mode = evidence.get("mode", "unknown")
+                success = evidence.get("success", False)
+                status = evidence.get("status_code", "N/A")
+                print(f"  类型: sent evidence")
+                print(f"  模式: {mode}, 成功: {success}, 状态码: {status}")
+                print(f"  payload 与文件一致: {payload_file.name}")
+            else:
+                print(f"✗ {scenario}: payload 不一致!")
+                print(f"  evidence.payload: {list(evidence_payload.keys())}")
+                print(f"  {payload_file.name}: {list(file_payload.keys())}")
+                all_pass = False
 
         print()
 

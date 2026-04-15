@@ -1,9 +1,31 @@
 # OpenClaw Notification Contract
 
-> M4 — Notification 集成 PoC 包
+> M6 — Notification 线路最小可靠投递版
 > 目的：定义 notification 线路的输入载荷、输出结构、字段契约、容错语义
+> 成熟度：从 PoC 可跑 → 最小可靠投递（M6）
 
 ---
+
+## 契约成熟度说明
+
+当前 notification 线路处于 **最小可靠投递版（M6）** 成熟度：
+
+### 已完成
+
+- ✅ mock/real 模式支持
+- ✅ evidence 保存（含 pre-send failure 区分）
+- ✅ 最小 retry 机制（2 次重试）
+- ✅ 契约定义清晰（SendInput、SendResult、NotificationEvidence）
+
+### 未完成（不属于 M6 范围）
+
+- ❌ 消息队列
+- ❌ 持久化 outbox
+- ❌ tracing 平台
+- ❌ UI 管理面
+- ❌ 正式 OpenClaw 插件开发
+
+**说明：** 当前契约满足最小可靠投递需求，但不夸大为"正式生产接入完成"。
 
 ## 1. 通知输入载荷（OpenClawPayload）
 
@@ -193,14 +215,13 @@ Severity 不单独携带，而是通过 `explanation_summary` 体现：
 
 ---
 
-## 4. Timeout / Failure / Retry 最小语义
+## 4. Timeout / Failure / Retry 语义（M6 更新）
 
 ### 4.1 Timeout 语义
 
 - **HTTP gateway** — 默认 10 秒（`timeout_ms=10_000`）
 - **Command gateway** — 默认 5 秒（`timeout_ms=5_000`）
 - 超时后返回 `WakeResult(success=False, error="Request timed out")`
-- 不自动 retry（PoC 阶段简化）
 
 ### 4.2 Failure 语义
 
@@ -212,14 +233,59 @@ Severity 不单独携带，而是通过 `explanation_summary` 体现：
 | DNS 解析失败 | `success=False, error="{reason}"` | 主机不存在 |
 | Timeout | `success=False, error="Request timed out"` | 超时 |
 
-### 4.3 Retry 语义（当前 PoC 未实现）
+### 4.3 Retry 语义（M6 最小实现）
 
-当前 **不实现 retry**，理由：
+**Retry 配置：**
 
-- PoC 阶段验证链路畅通即可
-- Retry 需要持久化未发送通知
-- Retry 需要幂等性保证
-- 这些是生产级需求，待后续演进
+| 参数 | 默认值 | 说明 |
+|-----|-------|------|
+| `max_retries` | 2 | 总共最多 3 次尝试（含首次） |
+| `retry_delay_ms` | 1000 | 固定 1 秒间隔（无指数退避） |
+| `retry_enabled` | true | 可通过 `OPENCLAW_RETRY_ENABLED=false` 禁用 |
+
+**可重试错误：**
+
+| 错误类型 | 示例 | 可重试 |
+|---------|------|--------|
+| 网络错误 | Connection refused, Connection timeout | ✅ |
+| HTTP 5xx | 500, 502, 503, 504 | ✅ |
+| Timeout | Request timed out | ✅ |
+
+**不可重试错误：**
+
+| 错误类型 | 示例 | 可重试 |
+|---------|------|--------|
+| HTTP 4xx | 400, 401, 403, 404 | ❌ |
+| payload 错误 | Invalid payload format | ❌ |
+| pre-send failure | Decision mismatch | ❌ |
+
+**Retry 结果记录：**
+
+Retry 信息记录在 `ValidationEvidence` 中：
+
+```python
+@dataclass(frozen=True)
+class ValidationEvidence:
+    ...
+    attempts: int = 1      # 发送尝试次数（含 retry）
+    retried: bool = False  # 是否进行了重试
+```
+
+**环境变量控制：**
+
+```bash
+# 启用 retry（默认）
+export OPENCLAW_RETRY_ENABLED="true"
+
+# 禁用 retry
+export OPENCLAW_RETRY_ENABLED="false"
+```
+
+**说明：** M6 的 retry 机制是**最小实现**，满足基本可靠投递需求：
+- 不引入消息队列
+- 不持久化未发送通知
+- 不保证幂等性（依赖上游）
+- Retry 信息记录在 evidence 中（可追溯）
 
 ---
 

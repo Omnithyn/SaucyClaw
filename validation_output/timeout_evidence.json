@@ -2,12 +2,12 @@
   "scenario": "timeout",
   "mode": "mock",
   "gateway_url": "http://127.0.0.1:9999/nonexistent",
-  "timestamp": "2026-04-15T09:07:08.633650+00:00",
+  "timestamp": "2026-04-15T09:41:03.324815+00:00",
   "payload": {
     "event": "governance-decision",
     "instruction": "[governance|Block]\n决策: Block\n规则: test-rule\n原因: timeout test",
     "text": "治理决策: Block — timeout test",
-    "timestamp": "2026-04-15T09:07:08.632130+00:00",
+    "timestamp": "2026-04-15T09:41:03.320867+00:00",
     "sessionId": null,
     "projectPath": null,
     "projectName": null,
@@ -22,5 +22,7 @@
   "gateway": "unreachable",
   "success": false,
   "error": "[Errno 61] Connection refused",
-  "status_code": null
+  "status_code": null,
+  "attempts": 3,
+  "retried": true
 }

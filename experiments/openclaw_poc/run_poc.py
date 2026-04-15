@@ -42,6 +42,11 @@ from core.governance.loader import load_governance
 from core.engine.orchestrator import GovernanceEngine
 from adapters.openclaw.notification_adapter import OpenClawNotificationAdapter
 from adapters.openclaw.explain_bridge import ExplainBridge
+from experiments.openclaw_poc.notification_retry import (
+    RetryConfig,
+    is_retryable_error,
+    with_retry,
+)
 from experiments.openclaw_poc.mock_gateway import (
     start_mock_server_in_background,
     stop_mock_server,
@@ -60,7 +65,12 @@ DEFAULT_OUTPUT_DIR = "./validation_output"
 
 @dataclass(frozen=True)
 class ValidationEvidence:
-    """验证证据记录 — mock/real 模式统一的证据结构。"""
+    """验证证据记录 — mock/real 模式统一的证据结构。
+
+    M6 增强：支持 retry 信息记录
+    - attempts: 发送尝试次数（含 retry）
+    - retried: 是否进行了重试
+    """
     scenario: str
     mode: str  # "mock" / "real"
     gateway_url: str
@@ -70,6 +80,8 @@ class ValidationEvidence:
     success: bool
     error: str | None
     status_code: int | None
+    attempts: int = 1  # M6: 尝试次数
+    retried: bool = False  # M6: 是否重试
 
 
 def load_fixture(name: str) -> dict:
@@ -112,8 +124,15 @@ def build_evidence(
     gateway_url: str,
     payload: dict[str, Any] | None,
     wake_result: Any,
+    attempts: int = 1,
+    retried: bool = False,
 ) -> ValidationEvidence:
-    """构建验证证据记录。"""
+    """构建验证证据记录。
+
+    M6 增强：支持 retry 信息
+    - attempts: 发送尝试次数
+    - retried: 是否进行了重试
+    """
     return ValidationEvidence(
         scenario=scenario,
         mode=mode,
@@ -124,6 +143,8 @@ def build_evidence(
         success=wake_result.success,
         error=wake_result.error,
         status_code=wake_result.status_code,
+        attempts=attempts,
+        retried=retried,
     )
 
 
@@ -175,17 +196,30 @@ def run_scenario(
         else None
     )
 
-    # 3. 通过 OpenClaw gateway 发送通知
+    # 3. 通过 OpenClaw gateway 发送通知（M6: 增加 retry 支持）
     session_context = {
         "session_id": "poc-session-001",
         "project_path": str(PROJECT_ROOT),
         "project_name": "SaucyClaw",
     }
-    wake_result = adapter.send_decision(
-        result,
-        session_context=session_context,
-        explanation_summary=explanation_summary,
-    )
+
+    # M6: 使用 retry 包装发送
+    def _send():
+        return adapter.send_decision(
+            result,
+            session_context=session_context,
+            explanation_summary=explanation_summary,
+        )
+
+    retry_enabled = os.environ.get("OPENCLAW_RETRY_ENABLED", "true").lower() == "true"
+    if retry_enabled:
+        wake_result, attempts, retried = with_retry(_send, RetryConfig())
+        if attempts > 1:
+            print(f"[poc] Retry info: attempts={attempts}, retried={retried}")
+    else:
+        wake_result = _send()
+        attempts = 1
+        retried = False
 
     # 获取实际发送的 payload（从 adapter 记录，不依赖 mock gateway 回传）
     sent_payload = adapter.last_payload
@@ -198,6 +232,8 @@ def run_scenario(
             gateway_url=adapter.gateway_url,
             payload=sent_payload,
             wake_result=wake_result,
+            attempts=attempts,
+            retried=retried,
         )
         save_validation_bundle(evidence, output_dir)
         return False, sent_payload, wake_result
@@ -214,6 +250,8 @@ def run_scenario(
                 gateway_url=adapter.gateway_url,
                 payload=sent_payload,
                 wake_result=wake_result,
+                attempts=attempts,
+                retried=retried,
             )
             save_validation_bundle(evidence, output_dir)
             return False, sent_payload, wake_result
@@ -227,6 +265,8 @@ def run_scenario(
                 gateway_url=adapter.gateway_url,
                 payload=sent_payload,
                 wake_result=wake_result,
+                attempts=attempts,
+                retried=retried,
             )
             save_validation_bundle(evidence, output_dir)
             return False, sent_payload, wake_result
@@ -240,6 +280,8 @@ def run_scenario(
                 gateway_url=adapter.gateway_url,
                 payload=sent_payload,
                 wake_result=wake_result,
+                attempts=attempts,
+                retried=retried,
             )
             save_validation_bundle(evidence, output_dir)
             return False, sent_payload, wake_result
@@ -255,13 +297,15 @@ def run_scenario(
         gateway_url=adapter.gateway_url,
         payload=sent_payload,
         wake_result=wake_result,
+        attempts=attempts,
+        retried=retried,
     )
     save_validation_bundle(evidence, output_dir)
     return True, sent_payload, wake_result
 
 
 def run_timeout_test(output_dir: Path) -> tuple[bool, Any]:
-    """验证超时处理正确。"""
+    """验证超时处理正确（M6: 增加 retry 支持）。"""
     print("")
     print("[poc] Running timeout test")
 
@@ -284,7 +328,18 @@ def run_timeout_test(output_dir: Path) -> tuple[bool, Any]:
         suggestions=[],
     )
 
-    wake_result = adapter.send_decision(result)
+    # M6: 使用 retry 包装发送
+    def _send():
+        return adapter.send_decision(result)
+
+    retry_enabled = os.environ.get("OPENCLAW_RETRY_ENABLED", "true").lower() == "true"
+    if retry_enabled:
+        wake_result, attempts, retried = with_retry(_send, RetryConfig())
+    else:
+        wake_result = _send()
+        attempts = 1
+        retried = False
+
     sent_payload = adapter.last_payload
 
     if wake_result.success:
@@ -295,6 +350,8 @@ def run_timeout_test(output_dir: Path) -> tuple[bool, Any]:
             gateway_url=adapter.gateway_url,
             payload=sent_payload,
             wake_result=wake_result,
+            attempts=attempts,
+            retried=retried,
         )
         save_validation_bundle(evidence, output_dir)
         return False, wake_result
@@ -306,6 +363,8 @@ def run_timeout_test(output_dir: Path) -> tuple[bool, Any]:
         gateway_url=adapter.gateway_url,
         payload=sent_payload,
         wake_result=wake_result,
+        attempts=attempts,
+        retried=retried,
     )
     save_validation_bundle(evidence, output_dir)
     return True, wake_result
