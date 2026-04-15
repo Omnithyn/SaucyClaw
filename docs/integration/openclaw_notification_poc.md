@@ -351,14 +351,14 @@ PoC Results:
 
 ### 7.1 两条线的本质区别
 
-| 维度 | Shadow Runtime 线（M1/M2） | Notification 线（M3/M4） |
-|------|---------------------------|------------------------|
+| 维度 | Shadow Runtime 线（M1/M2） | Notification 线（M3/M4/M5） |
+|------|---------------------------|---------------------------|
 | **目标** | 外围包装模板，模拟宿主接入流程 | 真实通知路径，验证 OpenClaw gateway 接入 |
 | **输出方向** | 内部调试/日志（`debug_render`） | 外部 gateway（HTTP POST / command） |
-| **核心组件** | `ShadowRuntime` + `ExplainBridge` + `RuntimeTrace` | `OpenClawNotificationAdapter` + `mock_gateway` |
-| **验证方式** | 单元测试 + 集成测试（201 tests） | PoC 脚本 + 单元测试（13 tests） |
-| **成熟度** | 已稳定，可作为接入模板 | 实验性，待真实 gateway 验证 |
-| **后续演进** | 保持作为接入参考模板 | 真实 OpenClaw gateway → TMUX 阻断 → oh-my-opencode 插件 |
+| **核心组件** | `ShadowRuntime` + `ExplainBridge` + `RuntimeTrace` + `debug_render` | `OpenClawNotificationAdapter` + `mock_gateway` + `run_poc` |
+| **验证方式** | 单元测试 + 集成测试（201 tests） | PoC 脚本 + 单元测试（13 tests + 验证证据保存） |
+| **成熟度** | **已稳定**，可作为接入模板 | **实验性**，Mock 模式已验证，Real 模式待验证 |
+| **后续演进** | 保持作为接入参考模板，不主动扩展 | 真实 OpenClaw gateway → TMUX 阻断 → oh-my-opencode 插件 |
 
 ### 7.2 当前推荐使用场景
 
@@ -367,7 +367,7 @@ PoC Results:
 - 调试治理引擎和规则集
 - 验证规则语义和治理逻辑
 - 演示治理能力（内部演示）
-- 作为未来其他 runtime 接入的模板参考
+- 作为未来其他 runtime（非 OpenClaw）接入的模板参考
 
 #### 使用 Notification 线
 
@@ -376,7 +376,33 @@ PoC Results:
 - 为后续真实宿主接入做准备
 - 研究 notification-based governance 模式
 
-### 7.3 后续演进路径
+### 7.3 详细对比
+
+#### Shadow Runtime 线（M1/M2）
+
+- **架构**: `ShadowRuntime.process_and_write()` → `GovernanceEngine.process_event()` → `ExplainBridge.enhance_output()` → `debug_render()`
+- **输出**: 调试文本（控制台/日志），包含 `RuntimeTrace` 和 `ExplanationBundle`
+- **用途**: 模拟宿主接入流程，提供外围包装模板
+- **文档**: `docs/integration/openclaw_shadow_runtime.md`
+- **测试**: `tests/unit/test_shadow_runtime.py` + 相关测试（201 tests）
+
+#### Notification 线（M3/M4/M5）
+
+- **架构**: `OpenClawNotificationAdapter.send_decision()` → HTTP POST / shell command → OpenClaw gateway
+- **输出**: `OpenClawPayload`（JSON 格式），发送到外部 gateway
+- **用途**: 验证真实 OpenClaw gateway 接入
+- **文档**: `docs/integration/openclaw_notification_poc.md` + `docs/integration/openclaw_notification_contract.md` + `docs/integration/openclaw_real_gateway_requirements.md`
+- **测试**: `tests/unit/test_notification_adapter.py` + PoC 脚本（13 tests + 验证证据保存）
+
+### 7.4 两条线关系
+
+- **互补关系**: Shadow 线提供治理内核调试能力，Notification 线提供外部通知能力
+- **可组合使用**: 可以同时启用 `ShadowRuntime`（调试）+ `OpenClawNotificationAdapter`（通知）
+- **不同演进路径**:
+  - Shadow 线保持稳定作为模板参考
+  - Notification 线向真实宿主接入演进
+
+### 7.5 后续演进路径
 
 #### Shadow Runtime 线
 - 保持稳定，不主动扩展
@@ -384,9 +410,14 @@ PoC Results:
 - 可能后续用于其他 runtime（非 OpenClaw）接入
 
 #### Notification 线
-1. **短期** — 真实 OpenClaw gateway 验证
-2. **中期** — TMUX 级间接阻断
-3. **长期** — oh-my-opencode 插件治理拦截
+1. **M5（本轮）** — 真实 Gateway 验证与 Notification 线路收口
+   - 真实环境需求清单
+   - Notification 线路代码收口
+   - 真实 Gateway live validation
+   - 验证说明文档
+2. **短期** — 真实 OpenClaw gateway 验证完成
+3. **中期** — TMUX 级间接阻断
+4. **长期** — oh-my-opencode 插件治理拦截
 
 ---
 
@@ -424,16 +455,16 @@ PoC Results:
 
 ## 9. 后续真实接入建议
 
-### 9.1 下一轮（M5）建议目标
+### 9.1 下一轮（M6）建议目标
 
-**目标：真实 OpenClaw gateway 验证**
+**目标：Notification 线路正式化**
 
-- 替换 mock gateway → 真实 OpenClaw HTTP gateway
-- 配置 OpenClaw gateway URL 和 headers
-- 验证通知真实发送到 OpenClaw webhook
-- 验证 OpenClaw reply listener 能接收回复
+- 添加错误重试机制
+- 添加持久化未发送通知
+- 添加日志集成
+- 补充单元测试覆盖边界情况
 
-### 9.2 再下一轮（M6）建议目标
+### 9.2 再下一轮（M7）建议目标
 
 **目标：TMUX 级间接阻断**
 
@@ -441,7 +472,7 @@ PoC Results:
 - 实现暂停/终止 agent session
 - 结合 notification 发送审查请求
 
-### 9.3 长期（M7+）建议目标
+### 9.3 长期（M8+）建议目标
 
 **目标：oh-my-opencode 插件治理拦截**
 
