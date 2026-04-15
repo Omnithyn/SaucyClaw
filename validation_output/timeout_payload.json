@@ -2,7 +2,7 @@
   "event": "governance-decision",
   "instruction": "[governance|Block]\n决策: Block\n规则: test-rule\n原因: timeout test",
   "text": "治理决策: Block — timeout test",
-  "timestamp": "2026-04-15T08:40:20.382780+00:00",
+  "timestamp": "2026-04-15T09:07:08.632130+00:00",
   "sessionId": null,
   "projectPath": null,
   "projectName": null,

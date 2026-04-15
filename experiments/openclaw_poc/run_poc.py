@@ -151,6 +151,20 @@ def run_scenario(
 
     if result.decision != expected_decision:
         print(f"[poc] FAIL: expected {expected_decision}, got {result.decision}")
+        # 决策不匹配时也保存 evidence（此时还没有发送通知）
+        gateway_type = os.environ.get("OPENCLAW_GATEWAY_TYPE", "mock")
+        evidence = ValidationEvidence(
+            scenario=fixture_name,
+            mode=gateway_type,
+            gateway_url="",  # 还未发送
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            payload=None,  # 还未构造 payload
+            gateway="",  # 还未发送
+            success=False,
+            error=f"Decision mismatch: expected {expected_decision}, got {result.decision}",
+            status_code=None,
+        )
+        save_validation_bundle(evidence, output_dir)
         return False, None, None
 
     # 2. 通过桥接器生成解释包（统一使用 bridge.enhance_output）
