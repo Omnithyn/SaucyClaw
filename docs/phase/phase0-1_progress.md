@@ -558,3 +558,100 @@ print(bundle.risk_summary)
 
 ### 风险/偏差
 - 无
+
+---
+
+## M3 — 真实 OpenClaw 集成调查与 PoC 试验
+
+状态：**已完成**
+
+### 概述
+
+完成真实 OpenClaw 代码库的调查分析，验证"基于 write_back 模型接入真实 OpenClaw"的假设，并给出 PoC 路径建议。
+
+### 完成内容
+
+#### 调查分析
+- [x] `docs/integration/openclaw_real_runtime_gap_analysis.md` — 真实 OpenClaw 代码调查结果，
+  明确得出 **OpenClaw 不是"输出拦截器"，而是"事件通知调度器"** 的核心结论
+- [x] 从 oh-my-opencode v3.13.1 源码中提取出真实接口定义：
+  - `OpenClawPayload` 结构（event / instruction / text / timestamp / context）
+  - `WakeResult` 结构（gateway / success / error / statusCode）
+  - `wakeOpenClaw()` 函数签名
+- [x] 对比 mock adapter 假设与真实 OpenClaw 差距：
+  - 触发时机：特定 runtime event vs 每次治理决策
+  - 方向：单向通知发送 vs 双向拦截+回写
+  - 输出面：OpenClawPayload vs GateResult
+  - 接点：wakeOpenClaw() vs write_back() / intercept_output()
+
+#### PoC 计划
+- [x] `docs/integration/openclaw_real_runtime_poc_plan.md` — 真实 OpenClaw PoC 路径规划，
+  确定从 notification-based 治理入手，验证三条路径（Block / Allow / Timeout）
+
+### 保证
+- **零 core 改动**
+- **零 adapter 契约改动**
+- **零代码实现**（纯文档与规划）
+
+### 风险/偏差
+- 假设被推翻：真实 OpenClaw 不存在 `write_back()` 等价物，无法按 Phase 1/2 的 mock adapter 模型接入
+
+---
+
+## M4 — Notification 集成 PoC 包
+
+状态：**已完成**
+
+### 概述
+
+验证 **SaucyClaw 治理决策可通过 OpenClaw gateway 真实发送为通知**，构建 notification-based 治理的最小可行路径。
+
+### 完成内容
+
+#### 新增代码
+- [x] `adapters/openclaw/notification_adapter.py` — HTTP/Command gateway 通知适配器，
+  包含 `send_decision()` 和 `_build_openclaw_payload()`
+- [x] `experiments/openclaw_poc/mock_gateway.py` — 本地 mock gateway server，
+  接收并打印 OpenClawPayload
+- [x] `experiments/openclaw_poc/run_poc.py` — 统一 PoC 入口，
+  验证 Block / Allow / Timeout 三条路径
+
+#### 新增文档
+- [x] `docs/integration/openclaw_notification_poc.md` — 本文档，
+  回答：Notification PoC 线路是什么 / 与 Shadow Runtime 线路区别 / 如何跑通三条路径 / 通知载荷与返回结构 / 后续真实接入建议
+- [x] `docs/integration/openclaw_notification_contract.md` — 通知载荷契约定义，
+  详细说明 `OpenClawPayload` 和 `WakeResult` 结构、字段语义、携带方式、超时/失败语义
+
+#### 文档更新
+- [x] `docs/integration/openclaw_shadow_runtime.md` — 新增第 8 节 **"Shadow Runtime 线 vs Notification 线对照"**，
+  明确两条线的本质区别、推荐使用场景、详细对比、关系说明
+
+#### 新增测试
+- [x] `tests/unit/test_notification_adapter.py` — 13 个单元测试，
+  覆盖 payload 构建 / HTTP 发送 / log 记录 / WakeResult
+
+### 保证
+- **零 core 改动**（`git diff core/` 为空）
+- **零现有测试破坏**（214 tests 全部通过）
+- **零 pyflakes 报错**
+
+### 风险/偏差
+- 仍为 mock gateway，真实 OpenClaw gateway 验证需后续完成
+
+### 验证方式
+```bash
+# 一键运行 PoC
+python -m experiments.openclaw_poc.run_poc
+
+# 预期输出包含
+# [mock-gateway] Received event: governance-decision
+# [mock-gateway] Instruction:
+#   [governance|Block]
+#   决策: Block
+#   规则: rule-reviewer-must-differ
+#   ...
+# PoC Results:
+#   Block notification:  PASS
+#   Allow notification:  PASS
+#   Timeout handling:    PASS
+```

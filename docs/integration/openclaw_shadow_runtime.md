@@ -258,7 +258,62 @@ bridge.disable_shadow_mode()
 
 ---
 
-## 8. 快速验证
+## 8. Shadow Runtime 线 vs Notification 线对照
+
+### 8.1 两条线的本质区别
+
+| 维度 | Shadow Runtime 线（M1/M2） | Notification 线（M3/M4） |
+|------|---------------------------|------------------------|
+| **目标** | 外围包装模板，模拟宿主接入流程 | 真实通知路径，验证 OpenClaw gateway 接入 |
+| **输出方向** | 内部调试/日志（`debug_render`） | 外部 gateway（HTTP POST / command） |
+| **核心组件** | `ShadowRuntime` + `ExplainBridge` + `RuntimeTrace` | `OpenClawNotificationAdapter` + `mock_gateway` |
+| **验证方式** | 单元测试 + 集成测试（201 tests） | PoC 脚本 + 单元测试（13 tests） |
+| **成熟度** | 已稳定，可作为接入模板 | 实验性，待真实 gateway 验证 |
+| **后续演进** | 保持作为接入参考模板 | 真实 OpenClaw gateway → TMUX 阻断 → oh-my-opencode 插件 |
+
+### 8.2 当前推荐使用场景
+
+#### 使用 Shadow Runtime 线
+
+- 调试治理引擎和规则集
+- 验证规则语义和治理逻辑
+- 演示治理能力（内部演示）
+- 作为未来其他 runtime 接入的模板参考
+
+#### 使用 Notification 线
+
+- 验证 OpenClaw gateway 接入可行性
+- 测试真实通知发送路径
+- 为后续真实宿主接入做准备
+- 研究 notification-based governance 模式
+
+### 8.3 详细对比
+
+#### Shadow Runtime 线（M1/M2）
+
+- **架构**: `ShadowRuntime.process_and_write()` → `GovernanceEngine.process_event()` → `ExplainBridge.enhance_output()` → `debug_render()`
+- **输出**: 调试文本（控制台/日志），包含 `RuntimeTrace` 和 `ExplanationBundle`
+- **用途**: 模拟宿主接入流程，提供外围包装模板
+- **文档**: `docs/integration/openclaw_shadow_runtime.md`
+- **测试**: `tests/unit/test_shadow_runtime.py` + 相关测试（201 tests）
+
+#### Notification 线（M3/M4）
+
+- **架构**: `OpenClawNotificationAdapter.send_decision()` → HTTP POST / shell command → OpenClaw gateway
+- **输出**: `OpenClawPayload`（JSON 格式），发送到外部 gateway
+- **用途**: 验证真实 OpenClaw gateway 接入
+- **文档**: `docs/integration/openclaw_notification_poc.md` + `docs/integration/openclaw_notification_contract.md`
+- **测试**: `tests/unit/test_notification_adapter.py` + PoC 脚本（13 tests）
+
+### 8.4 两条线关系
+
+- **互补关系**: Shadow 线提供治理内核调试能力，Notification 线提供外部通知能力
+- **可组合使用**: 可以同时启用 `ShadowRuntime`（调试）+ `OpenClawNotificationAdapter`（通知）
+- **不同演进路径**: Shadow 线保持稳定作为模板参考，Notification 线向真实宿主接入演进
+
+---
+
+## 9. 快速验证
 
 ```bash
 # 运行 example
