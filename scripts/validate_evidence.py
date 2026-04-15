@@ -6,8 +6,12 @@
 - 验证所有场景的 payload 和 evidence 文件是否存在
 - 验证 evidence.payload 与 _payload.json 内容一致
 - 为 M5-R 提供自动化验证支持
+
+环境变量：
+- VALIDATION_OUTPUT_DIR: 验证目录路径（可选，默认 ./validation_output）
 """
 import json
+import os
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -120,7 +124,11 @@ def verify_all_payloads_exist(validation_dir: Path) -> bool:
 
 def main():
     """主函数"""
-    validation_dir = Path("validation_output")
+    # 支持从环境变量读取验证目录
+    validation_dir_path = os.environ.get("VALIDATION_OUTPUT_DIR", "validation_output")
+    validation_dir = Path(validation_dir_path)
+
+    print(f"验证目录: {validation_dir.absolute()}")
 
     if not validation_dir.exists():
         print(f"✗ 验证目录不存在: {validation_dir.absolute()}")
@@ -134,6 +142,7 @@ def main():
 
     # 总结
     print("\n=== 验证总结 ===")
+    print(f"验证目录: {validation_dir.absolute()}")
     print(f"Payload 文件存在性: {'✓ PASS' if payload_ok else '✗ FAIL'}")
     print(f"Evidence 一致性: {'✓ PASS' if consistency_ok else '✗ FAIL'}")
 

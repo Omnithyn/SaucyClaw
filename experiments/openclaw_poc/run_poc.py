@@ -227,6 +227,7 @@ def run_scenario(
                 payload=sent_payload,
                 wake_result=wake_result,
             )
+            save_validation_bundle(evidence, output_dir)
             return False, sent_payload, wake_result
 
         print("[poc] OK: mock gateway received notification")
@@ -249,6 +250,9 @@ def run_timeout_test(output_dir: Path) -> tuple[bool, Any]:
     """验证超时处理正确。"""
     print("")
     print("[poc] Running timeout test")
+
+    # 获取当前运行模式（与 run_scenario 保持一致）
+    gateway_type = os.environ.get("OPENCLAW_GATEWAY_TYPE", "mock")
 
     adapter = OpenClawNotificationAdapter(
         gateway_url="http://127.0.0.1:9999/nonexistent",
@@ -273,7 +277,7 @@ def run_timeout_test(output_dir: Path) -> tuple[bool, Any]:
         print("[poc] FAIL: expected failure for unreachable gateway")
         evidence = build_evidence(
             scenario="timeout",
-            mode="mock",
+            mode=gateway_type,
             gateway_url=adapter.gateway_url,
             payload=sent_payload,
             wake_result=wake_result,
@@ -284,7 +288,7 @@ def run_timeout_test(output_dir: Path) -> tuple[bool, Any]:
     print(f"[poc] OK: timeout handled correctly (error: {wake_result.error})")
     evidence = build_evidence(
         scenario="timeout",
-        mode="mock",
+        mode=gateway_type,
         gateway_url=adapter.gateway_url,
         payload=sent_payload,
         wake_result=wake_result,

@@ -139,7 +139,7 @@
 - [ ] `WakeResult.success` = `False`
 - [ ] `WakeResult.error` 非空（如 `"Connection refused"`）
 - [ ] Evidence 文件存在：`validation_output/timeout_evidence.json`
-- [ ] Evidence 中 `mode` = `mock`
+- [ ] Evidence 中 `mode` = `mock` 或 `real`（跟随 `OPENCLAW_GATEWAY_TYPE`）
 - [ ] Evidence 中 `gateway_url` = `http://127.0.0.1:9999/nonexistent`
 - [ ] Evidence 中 `timestamp` 非空
 - [ ] 未静默吞掉错误
