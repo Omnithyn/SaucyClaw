@@ -1,0 +1,26 @@
+{
+  "scenario": "allow_specialist_via_reviewer",
+  "mode": "mock",
+  "gateway_url": "http://127.0.0.1:18790",
+  "timestamp": "2026-04-15T06:44:03.932988+00:00",
+  "payload": {
+    "event": "governance-decision",
+    "instruction": "[governance|Allow]\n决策: Allow\n未触发治理规则\n原因: 无规则触发\n解释: 未触发治理规则",
+    "text": "治理决策: Allow — 无规则触发",
+    "timestamp": "2026-04-15T06:44:03.825144+00:00",
+    "sessionId": "poc-session-001",
+    "projectPath": "/Users/yaochunyang/tools/AIGC/agent/SaucyClaw",
+    "projectName": "SaucyClaw",
+    "tmuxSession": null,
+    "context": {
+      "sessionId": "poc-session-001",
+      "projectPath": "/Users/yaochunyang/tools/AIGC/agent/SaucyClaw",
+      "projectName": "SaucyClaw",
+      "tmuxSession": ""
+    }
+  },
+  "gateway": "mock",
+  "success": true,
+  "error": null,
+  "status_code": 200
+}

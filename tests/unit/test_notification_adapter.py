@@ -217,3 +217,73 @@ class TestWakeResult:
         wr = WakeResult(gateway="test", success=True)
         with pytest.raises(Exception):
             wr.gateway = "modified"  # type: ignore[misc]
+
+
+class TestLastPayload:
+    """测试 adapter.last_payload 验证证据记录能力。"""
+
+    def setup_method(self) -> None:
+        self.server, self.thread = start_mock_server_in_background(port=MOCK_PORT)
+
+    def teardown_method(self) -> None:
+        stop_mock_server(self.server)
+
+    def test_last_payload_is_none_initially(self) -> None:
+        adapter = OpenClawNotificationAdapter(
+            gateway_url=f"http://127.0.0.1:{MOCK_PORT}",
+            gateway_name="mock",
+        )
+        assert adapter.last_payload is None
+
+    def test_last_payload_after_send(self) -> None:
+        clear_received()
+        adapter = OpenClawNotificationAdapter(
+            gateway_url=f"http://127.0.0.1:{MOCK_PORT}",
+            gateway_name="mock",
+        )
+
+        result = _make_block_result()
+        adapter.send_decision(result)
+
+        payload = adapter.last_payload
+        assert payload is not None
+        assert payload["event"] == "governance-decision"
+        assert "[governance|Block]" in payload["instruction"]
+
+    def test_last_payload_is_copy_not_reference(self) -> None:
+        adapter = OpenClawNotificationAdapter(
+            gateway_url=f"http://127.0.0.1:{MOCK_PORT}",
+            gateway_name="mock",
+        )
+        adapter.send_decision(_make_block_result())
+
+        p1 = adapter.last_payload
+        p2 = adapter.last_payload
+
+        assert p1 is not p2
+
+    def test_last_payload_updated_on_each_send(self) -> None:
+        adapter = OpenClawNotificationAdapter(
+            gateway_url=f"http://127.0.0.1:{MOCK_PORT}",
+            gateway_name="mock",
+        )
+
+        adapter.send_decision(_make_block_result())
+        assert "Block" in adapter.last_payload["instruction"]
+
+        adapter.send_decision(_make_allow_result())
+        assert "Allow" in adapter.last_payload["instruction"]
+
+    def test_last_payload_on_failure(self) -> None:
+        """即使 gateway 不可达，也应记录已构造的 payload。"""
+        adapter = OpenClawNotificationAdapter(
+            gateway_url="http://127.0.0.1:19999",
+            gateway_name="unreachable",
+            timeout_ms=1_000,
+        )
+
+        adapter.send_decision(_make_block_result())
+
+        payload = adapter.last_payload
+        assert payload is not None
+        assert payload["event"] == "governance-decision"

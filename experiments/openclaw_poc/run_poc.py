@@ -29,6 +29,8 @@ import json
 import os
 import sys
 import time
+from dataclasses import dataclass, asdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +58,20 @@ MOCK_PORT = 18790
 DEFAULT_OUTPUT_DIR = "./validation_output"
 
 
+@dataclass(frozen=True)
+class ValidationEvidence:
+    """验证证据记录 — mock/real 模式统一的证据结构。"""
+    scenario: str
+    mode: str  # "mock" / "real"
+    gateway_url: str
+    timestamp: str
+    payload: dict[str, Any] | None
+    gateway: str
+    success: bool
+    error: str | None
+    status_code: int | None
+
+
 def load_fixture(name: str) -> dict:
     """加载治理场景 fixture。"""
     path = FIXTURES_DIR / f"{name}.yaml"
@@ -73,29 +89,42 @@ def ensure_output_dir() -> Path:
     return path
 
 
-def save_validation_evidence(
-    scenario: str,
-    payload: dict[str, Any] | None,
-    wake_result: Any,
-    output_dir: Path,
-) -> None:
-    """保存验证证据到文件。"""
-    if payload:
-        payload_file = output_dir / f"{scenario}_payload.json"
+def save_validation_bundle(evidence: ValidationEvidence, output_dir: Path) -> None:
+    """保存验证证据包 — mock/real 模式统一的证据保存。"""
+    # 保存 payload（如果有）
+    if evidence.payload:
+        payload_file = output_dir / f"{evidence.scenario}_payload.json"
         with open(payload_file, "w") as f:
-            json.dump(payload, f, indent=2, ensure_ascii=False)
+            json.dump(evidence.payload, f, indent=2, ensure_ascii=False)
         print(f"[validation] Saved payload to {payload_file}")
 
-    result_file = output_dir / f"{scenario}_result.json"
-    result_data = {
-        "gateway": wake_result.gateway,
-        "success": wake_result.success,
-        "error": wake_result.error,
-        "status_code": wake_result.status_code,
-    }
-    with open(result_file, "w") as f:
-        json.dump(result_data, f, indent=2)
-    print(f"[validation] Saved result to {result_file}")
+    # 保存完整证据包
+    evidence_file = output_dir / f"{evidence.scenario}_evidence.json"
+    evidence_data = asdict(evidence)
+    with open(evidence_file, "w") as f:
+        json.dump(evidence_data, f, indent=2, ensure_ascii=False)
+    print(f"[validation] Saved evidence to {evidence_file}")
+
+
+def build_evidence(
+    scenario: str,
+    mode: str,
+    gateway_url: str,
+    payload: dict[str, Any] | None,
+    wake_result: Any,
+) -> ValidationEvidence:
+    """构建验证证据记录。"""
+    return ValidationEvidence(
+        scenario=scenario,
+        mode=mode,
+        gateway_url=gateway_url,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        payload=payload,
+        gateway=wake_result.gateway,
+        success=wake_result.success,
+        error=wake_result.error,
+        status_code=wake_result.status_code,
+    )
 
 
 def run_scenario(
@@ -144,40 +173,76 @@ def run_scenario(
         explanation_summary=explanation_summary,
     )
 
+    # 获取实际发送的 payload（从 adapter 记录，不依赖 mock gateway 回传）
+    sent_payload = adapter.last_payload
+
     if not wake_result.success:
         print(f"[poc] FAIL: gateway notification failed: {wake_result.error}")
-        save_validation_evidence(fixture_name, None, wake_result, output_dir)
-        return False, None, wake_result
+        evidence = build_evidence(
+            scenario=fixture_name,
+            mode=os.environ.get("OPENCLAW_GATEWAY_TYPE", "mock"),
+            gateway_url=adapter.gateway_url,
+            payload=sent_payload,
+            wake_result=wake_result,
+        )
+        save_validation_bundle(evidence, output_dir)
+        return False, sent_payload, wake_result
 
     # 4. 验证 mock gateway 收到通知（仅 Mock 模式）
-    payload = None
     gateway_type = os.environ.get("OPENCLAW_GATEWAY_TYPE", "mock")
     if gateway_type == "mock":
         time.sleep(0.1)  # 给 server 一点处理时间
         if not received_payloads:
             print("[poc] FAIL: mock gateway received no payload")
-            save_validation_evidence(fixture_name, None, wake_result, output_dir)
-            return False, None, wake_result
+            evidence = build_evidence(
+                scenario=fixture_name,
+                mode=gateway_type,
+                gateway_url=adapter.gateway_url,
+                payload=sent_payload,
+                wake_result=wake_result,
+            )
+            save_validation_bundle(evidence, output_dir)
+            return False, sent_payload, wake_result
 
-        last_payload = received_payloads[-1]
-        if last_payload.get("event") != "governance-decision":
-            print("[poc] FAIL: wrong event type: " + last_payload.get("event", ""))
-            save_validation_evidence(fixture_name, last_payload, wake_result, output_dir)
-            return False, last_payload, wake_result
+        last_received = received_payloads[-1]
+        if last_received.get("event") != "governance-decision":
+            print("[poc] FAIL: wrong event type: " + last_received.get("event", ""))
+            evidence = build_evidence(
+                scenario=fixture_name,
+                mode=gateway_type,
+                gateway_url=adapter.gateway_url,
+                payload=sent_payload,
+                wake_result=wake_result,
+            )
+            save_validation_bundle(evidence, output_dir)
+            return False, sent_payload, wake_result
 
-        instruction = last_payload.get("instruction", "")
+        instruction = last_received.get("instruction", "")
         if expected_decision not in instruction:
             print("[poc] FAIL: instruction doesn't contain expected decision")
-            save_validation_evidence(fixture_name, last_payload, wake_result, output_dir)
-            return False, last_payload, wake_result
+            evidence = build_evidence(
+                scenario=fixture_name,
+                mode=gateway_type,
+                gateway_url=adapter.gateway_url,
+                payload=sent_payload,
+                wake_result=wake_result,
+            )
+            return False, sent_payload, wake_result
 
         print("[poc] OK: mock gateway received notification")
-        payload = last_payload
     else:
         print(f"[poc] OK: sent to real gateway ({wake_result.status_code})")
 
-    save_validation_evidence(fixture_name, payload, wake_result, output_dir)
-    return True, payload, wake_result
+    # 统一保存验证证据（使用 adapter 记录的 sent_payload）
+    evidence = build_evidence(
+        scenario=fixture_name,
+        mode=gateway_type,
+        gateway_url=adapter.gateway_url,
+        payload=sent_payload,
+        wake_result=wake_result,
+    )
+    save_validation_bundle(evidence, output_dir)
+    return True, sent_payload, wake_result
 
 
 def run_timeout_test(output_dir: Path) -> tuple[bool, Any]:
@@ -202,14 +267,29 @@ def run_timeout_test(output_dir: Path) -> tuple[bool, Any]:
     )
 
     wake_result = adapter.send_decision(result)
+    sent_payload = adapter.last_payload
 
     if wake_result.success:
         print("[poc] FAIL: expected failure for unreachable gateway")
-        save_validation_evidence("timeout", None, wake_result, output_dir)
+        evidence = build_evidence(
+            scenario="timeout",
+            mode="mock",
+            gateway_url=adapter.gateway_url,
+            payload=sent_payload,
+            wake_result=wake_result,
+        )
+        save_validation_bundle(evidence, output_dir)
         return False, wake_result
 
     print(f"[poc] OK: timeout handled correctly (error: {wake_result.error})")
-    save_validation_evidence("timeout", None, wake_result, output_dir)
+    evidence = build_evidence(
+        scenario="timeout",
+        mode="mock",
+        gateway_url=adapter.gateway_url,
+        payload=sent_payload,
+        wake_result=wake_result,
+    )
+    save_validation_bundle(evidence, output_dir)
     return True, wake_result
 
 

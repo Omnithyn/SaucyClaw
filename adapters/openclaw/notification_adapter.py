@@ -121,6 +121,7 @@ class OpenClawNotificationAdapter:
         self.headers = headers or {"Content-Type": "application/json"}
         self.timeout_ms = timeout_ms
         self._log: list[tuple[GateResult, WakeResult]] = []
+        self._last_payload: dict[str, Any] | None = None
 
     def send_decision(
         self,
@@ -138,9 +139,17 @@ class OpenClawNotificationAdapter:
             session_context=session_context,
         )
 
+        self._last_payload = payload
         wake_result = self._wake_gateway(payload)
         self._log.append((result, wake_result))
         return wake_result
+
+    @property
+    def last_payload(self) -> dict[str, Any] | None:
+        """返回最近一次发送的 payload 副本（用于验证证据保存）。"""
+        if self._last_payload is None:
+            return None
+        return dict(self._last_payload)
 
     def _wake_gateway(self, payload: dict[str, Any]) -> WakeResult:
         """发送 payload 到 HTTP gateway。"""
