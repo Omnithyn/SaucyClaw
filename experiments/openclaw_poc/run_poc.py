@@ -1,5 +1,21 @@
 """PoC 入口脚本 — 验证 SaucyClaw → OpenClaw gateway 通知链路。
 
+【成熟度：PoC/experiment】
+本脚本属于 PoC 验证实验包，用于测试 notification 线路的完整链路。
+
+正式 notification 线接入：
+- 使用 OpenClawNotificationAdapter (adapters/openclaw/notification_adapter.py)
+- 参见 docs/integration/openclaw_notification_runner.md
+
+本脚本功能：
+- 验证 mock/real gateway 通知发送
+- 生成验证证据（evidence）
+- 测试 timeout/failure/retry 处理
+
+当 notification 线正式化时，本脚本可作为验证工具保留。
+
+---
+
 用法：
     # Mock 模式（默认）
     python -m experiments.openclaw_poc.run_poc

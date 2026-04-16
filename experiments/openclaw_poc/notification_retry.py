@@ -1,5 +1,21 @@
 """最小 retry 机制
 
+【成熟度：PoC/experiment】
+本模块属于 PoC 验证实验包，不是正式 notification 线的核心能力。
+
+正式 notification 线核心：
+- OpenClawNotificationAdapter (adapters/openclaw/notification_adapter.py)
+
+本模块提供的 retry 机制是最小实现：
+- 不引入消息队列
+- 不持久化未发送通知
+- 不保证幂等性（依赖上游）
+- Retry 信息记录在 evidence 中（可追溯）
+
+当 notification 线正式化时，本模块可平滑迁移或替换为更可靠的 retry 方案。
+
+---
+
 定义可重试错误类型，实现有限次 retry，记录 retry 信息。
 
 Retry 策略：

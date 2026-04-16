@@ -1,6 +1,21 @@
 """Notification 线路最小契约定义
 
-定义 notification 线路的正式最小契约，明确输入、输出、payload、evidence 的结构。
+【成熟度：PoC/experiment】
+本模块属于 PoC 验证实验包，不是正式 notification 线的核心契约。
+
+正式 notification 线核心：
+- OpenClawNotificationAdapter (adapters/openclaw/notification_adapter.py)
+- WakeResult (adapters.openclaw/notification_adapter.py)
+
+本模块定义的结构用于：
+- PoC evidence 验证记录（NotificationEvidence）
+- 验证用的包装结构（SendResult，含 retry 信息）
+
+当 notification 线正式化时，本模块可平滑迁移。
+
+---
+
+定义 notification 线路的验证契约，明确输入、输出、payload、evidence 的结构。
 
 契约成熟度：最小可靠投递版（M6）
 - 不夸大为"正式生产接入完成"
