@@ -32,3 +32,4 @@ _agents/
 
 # PoC validation output (generated at runtime)
 validation_output/
+real_validation_output/
