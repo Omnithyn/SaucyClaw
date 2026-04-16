@@ -61,11 +61,13 @@ SaucyClaw **不是**：
 │  - 治理资产库                                                │
 │  - 跨 runtime 迁移                                           │
 ├─────────────────────────────────────────────────────────────┤
-│                    宿主桥接层（进行中）                        │
-│  - OpenClaw adapter                                          │
-│  - OpenHarness adapter (TODO)                               │
-│  - Hermes adapter (TODO)                                    │
-│  - ExplainBridge（Shadow Mode）                             │
+│                    宿主桥接层（基础架构已形成）              │
+│  - OpenClaw adapter（三种接入模式）                         │
+│    - Shadow Mode（正式工程面）                              │
+│    - Notification Mode（正式工程面）                        │
+│    - Hooks-Live Mode（MVP）                                │
+│  - OpenHarness adapter (TODO)                              │
+│  - Hermes adapter (TODO)                                   │
 ├─────────────────────────────────────────────────────────────┤
 │                    解释与证据层（已完成）                      │
 │  - 解释能力（explain_matched_rules）                        │
@@ -191,12 +193,12 @@ SaucyClaw/
 第一次进入仓库，建议按以下顺序阅读：
 
 1. `README.md`（本文件）
-2. `docs/phase/project_alignment_report.md`（项目对齐报告）
-3. `system/SYSTEM_SPEC.md`（系统规范）
-4. `core/governance/models.py`（治理模型）
-5. `core/governance/matcher.py`（规则匹配器）
-6. `core/governance/explainer_bundle.py`（解释输出包）
-7. `adapters/openclaw/explain_bridge.py`（解释桥接器）
+2. `docs/integration/openclaw_integration_modes.md`（OpenClaw 三种接入模式）
+3. `docs/phase/project_alignment_report.md`（项目对齐报告）
+4. `system/SYSTEM_SPEC.md`（系统规范）
+5. `core/governance/models.py`（治理模型）
+6. `core/governance/matcher.py`（规则匹配器）
+7. `adapters/openclaw/__init__.py`（OpenClaw 接入面总入口）
 8. `tests/integration/test_governance_fixtures.py`（回归测试）
 
 > 语义裁决说明：若入口文件表达存在差异，以 `system/SYSTEM_SPEC.md` 为准。
@@ -217,15 +219,24 @@ SaucyClaw 适合：
 
 ## 八、当前方向
 
-当前阶段，SaucyClaw 已完成**治理内核**和**解释与证据层**的核心能力，正在推进**宿主桥接层**的完善，并规划**平台化演进层**的启动。
+当前阶段，SaucyClaw 已完成：
+- **治理内核**（规则引擎、本体模型、引擎编排）
+- **解释与证据层**（解释能力、证据生成、记忆沉淀）
+- **宿主桥接层基础架构**（三种 OpenClaw 接入模式）
 
-这意味着项目将持续补强：
+**OpenClaw 接入面当前状态：**
 
-- 多 runtime adapter 体系
+| 接入线 | 成熟度 | 说明 |
+|-------|--------|------|
+| Shadow Mode | ✅ 正式工程面 | 本地 mock 测试、治理引擎外围接入 |
+| Notification Mode | ✅ 正式工程面 | 旧通知线兼容、内部通知 |
+| Hooks-Live Mode | ⚠️ MVP | 真实 gateway 已打通，无队列/持久化 |
+
+下一步规划：
+- 多 runtime adapter 体系（OpenHarness / Hermes）
 - 治理规则的动态加载与热更新
 - 可视化编辑器与治理资产库
 - 跨 runtime 的治理能力迁移
-- 治理规则的自适应优化
 
 ---
 
