@@ -3,14 +3,27 @@
 使用 OpenClawHooksAdapter 通过 /hooks/agent endpoint 发送治理决策通知。
 
 用法：
-    export OPENCLAW_GATEWAY_URL="http://127.0.0.1:26277/hooks/agent"
-    export OPENCLAW_HOOKS_TOKEN="your-token"
+    # 方式 1：使用配置文件 ~/.saucyclaw/saucyclaw.json
     python -m experiments.openclaw_poc.live_validation
 
-环境变量：
-- OPENCLAW_GATEWAY_URL: hooks endpoint URL
-- OPENCLAW_HOOKS_TOKEN: hooks 认证 token
-- OPENCLAW_TIMEOUT_MS: 超时毫秒（默认 10000）
+    # 方式 2：使用环境变量
+    export SAUCYCLAW_GATEWAY_URL="http://your-gateway/hooks/agent"
+    export SAUCYCLAW_HOOKS_TOKEN="your-token"
+    python -m experiments.openclaw_poc.live_validation
+
+配置文件结构 (~/.saucyclaw/saucyclaw.json)：
+{
+  "notification": {
+    "gateway_url": "http://your-gateway/hooks/agent",
+    "hooks_token": "your-token",
+    "timeout_ms": 10000
+  }
+}
+
+环境变量（优先级高于配置文件）：
+- SAUCYCLAW_GATEWAY_URL: hooks endpoint URL
+- SAUCYCLAW_HOOKS_TOKEN: hooks 认证 token
+- SAUCYCLAW_TIMEOUT_MS: 超时毫秒（默认 10000）
 - LIVE_VALIDATION_OUTPUT_DIR: 验证证据输出目录（默认 ./real_validation_output）
 """
 
@@ -31,6 +44,7 @@ from core.governance.loader import load_governance
 from core.engine.orchestrator import GovernanceEngine
 from adapters.openclaw.hooks_adapter import OpenClawHooksAdapter, HooksWakeResult
 from adapters.openclaw.explain_bridge import ExplainBridge
+from core.config import load_notification_config, ensure_config_exists
 from stores.file.evidence.store import FileEvidenceStore
 from stores.file.memory.store import FileMemoryStore
 
@@ -208,22 +222,34 @@ def run_failure_test(adapter: OpenClawHooksAdapter, output_dir: Path) -> tuple[b
 
 def main() -> None:
     """主函数。"""
-    gateway_url = os.environ.get("OPENCLAW_GATEWAY_URL")
-    token = os.environ.get("OPENCLAW_HOOKS_TOKEN")
+    # 从配置文件或环境变量加载配置
+    config = load_notification_config()
+
+    gateway_url = config.gateway_url
+    token = config.hooks_token
 
     if not gateway_url or not token:
-        print("ERROR: Missing required environment variables")
-        print("  OPENCLAW_GATEWAY_URL: hooks endpoint URL")
-        print("  OPENCLAW_HOOKS_TOKEN: hooks authentication token")
+        print("ERROR: Missing gateway configuration")
+        print("")
+        print("Please configure either:")
+        print("  1. Config file: ~/.saucyclaw/saucyclaw.json")
+        print("  2. Environment variables:")
+        print("     SAUCYCLAW_GATEWAY_URL")
+        print("     SAUCYCLAW_HOOKS_TOKEN")
+        print("")
+        # 创建配置模板
+        config_path = ensure_config_exists()
+        print(f"Config template created at: {config_path}")
+        print("Please fill in gateway_url and hooks_token")
         sys.exit(1)
 
-    timeout_ms = int(os.environ.get("OPENCLAW_TIMEOUT_MS", 10_000))
+    timeout_ms = config.timeout_ms
     output_dir = ensure_output_dir()
 
     print("=" * 60)
     print("OpenClaw Live Validation (hooks/agent)")
     print("=" * 60)
-    print(f"[live] Gateway URL: {gateway_url}")
+    print(f"[live] Gateway: configured")
     print(f"[live] Output directory: {output_dir}")
 
     # 加载治理规则

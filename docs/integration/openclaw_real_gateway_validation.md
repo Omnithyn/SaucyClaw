@@ -14,7 +14,7 @@
 | 验证人 | Claude (via SaucyClaw M8 Live Validation) |
 | 验证日期 | 2026-04-16 |
 | 验证环境 | `[X] Real` |
-| Gateway URL | `http://127.0.0.1:26277/hooks/agent`（SSH tunnel to remote OpenClaw） |
+| Gateway URL | 配置于 `~/.saucyclaw/saucyclaw.json`（已验证通过） |
 | oh-my-opencode 版本 | clawdbot (2026.4.15-beta.1) |
 | 运行命令 | `python -m experiments.openclaw_poc.live_validation` |
 | 证据输出目录 | `real_validation_output/` |

@@ -14,7 +14,7 @@
 | 验证人 | Claude (via SaucyClaw) |
 | 验证日期 | 2026-04-16 |
 | 验证环境 | Real (OpenClaw hooks) |
-| Gateway URL | `http://127.0.0.1:26277/hooks/agent` |
+| Gateway URL | 配置于 `~/.saucyclaw/saucyclaw.json` |
 | Endpoint | `/hooks/agent` |
 | 认证方式 | `Authorization: Bearer <token>` |
 | 运行命令 | `python -m experiments.openclaw_poc.live_validation` |

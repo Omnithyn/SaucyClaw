@@ -83,7 +83,7 @@ class OpenClawHooksAdapter:
 
     用法：
         adapter = OpenClawHooksAdapter(
-            gateway_url="http://127.0.0.1:26277/hooks/agent",
+            gateway_url="http://your-gateway/hooks/agent",
             token="your-hooks-token",
         )
         result = adapter.send_decision(gate_result)
