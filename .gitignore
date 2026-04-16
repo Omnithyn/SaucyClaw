@@ -29,3 +29,6 @@ _agents/
 
 # Coverage
 .coverage
+
+# PoC validation output (generated at runtime)
+validation_output/
