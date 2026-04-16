@@ -127,8 +127,20 @@ raw_event
 
 - ✅ **Mock Adapter**：`OpenClawHostAdapter`（intercept_output + write_back）
 - ✅ **ExplainBridge**：解释能力接入 adapter 边界
-- ⏳ **真实 hook 接入**：待对接真实 OpenClaw 运行时（Phase 2.2）
+- ✅ **Shadow Mode**：`ShadowRuntime` 外围接入模板（正式工程面）
+- ✅ **Notification Mode**：`OpenClawNotificationAdapter` 旧通知线兼容（正式工程面）
+- ✅ **Hooks-Live Mode**：`OpenClawHooksAdapter` 真实 hooks 对接（MVP）
 - ⏳ **多 runtime 支持**：待实现 OpenHarness / Hermes adapter
+
+#### OpenClaw 三种接入模式
+
+| 模式 | 目的 | 入口模块 | 成熟度 |
+|------|------|---------|--------|
+| **shadow** | 本地 mock 测试、治理引擎外围接入 | `ShadowRuntime` | 正式工程面 |
+| **notification** | 旧通知线兼容、内部通知 | `OpenClawNotificationAdapter` | 正式工程面 |
+| **hooks-live** | 真实 OpenClaw gateway 对接 | `OpenClawHooksAdapter` | MVP |
+
+详细说明：`docs/integration/openclaw_integration_modes.md`
 
 ---
 

@@ -238,7 +238,30 @@ validation_output/
 
 ---
 
-## 9. 参考
+## 9. 与其他接入模式的对比
+
+OpenClaw 现有三种接入模式，Notification Mode 是其中之一：
+
+| 模式 | Payload 格式 | Endpoint | 用途 |
+|------|------------|---------|------|
+| **notification** | `OpenClawPayload` | 无直接 endpoint | 内部通知、旧通知线兼容 |
+| **shadow** | 无外部 payload | 无 | 本地 mock 测试、治理引擎外围接入 |
+| **hooks-live** | `HookAgentPayload` | `POST /hooks/agent` | 真实 OpenClaw gateway 对接 |
+
+**Notification Mode vs Hooks-Live Mode：**
+
+| 维度 | Notification Mode | Hooks-Live Mode |
+|------|------------------|-----------------|
+| payload 核心字段 | `event`, `instruction`, `text`, `timestamp` | `message`, `name`, `wakeMode` |
+| 认证方式 | 无 | Bearer token 必需 |
+| 响应结构 | HTTP 状态码 | `{ok, runId}` |
+| 适用场景 | 内部通知、不需要 hooks | 真实 gateway 对接 |
+
+详细说明：`docs/integration/openclaw_integration_modes.md`
+
+---
+
+## 10. 参考
 
 - `docs/integration/openclaw_notification_contract.md` — Notification 契约详细说明
 - `scripts/validate_evidence.py` — 证据验证脚本

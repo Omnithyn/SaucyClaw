@@ -1,15 +1,20 @@
 """OpenClaw 宿主适配器 — 外围接入包。
 
-本包提供围绕 OpenClaw mock adapter 的最小可交付接入链路，包含：
+本包提供围绕 OpenClaw 的三种接入模式：
 
-- **adapter** — 宿主适配器 mock（Phase 0-1）
-- **explain_bridge** — 解释桥接器，生成伴随输出（Phase 2.0）
-- **shadow_runtime** — Shadow Mode 外围接入模板（Phase 2.2）
-- **runtime_trace** — 运行链路最小摘要（Phase 2.5）
-- **debug_render** — 调试输出渲染器（Phase 2.6）
-- **hook_contract** — 外部接入契约 Protocol（Phase 2.3）
+**Shadow Mode（正式工程面）**
+- 基于 mock adapter 的本地测试和治理引擎外围接入
+- 入口模块：ShadowRuntime
 
-当前状态：基于 mock adapter 的最小闭环，尚未接入真实 OpenClaw hook。
+**Notification Mode（正式工程面）**
+- 旧通知线兼容，使用 OpenClawPayload 格式
+- 入口模块：OpenClawNotificationAdapter
+
+**Hooks-Live Mode（MVP）**
+- 真实 OpenClaw hooks 对接，使用 HookAgentPayload 格式
+- 入口模块：OpenClawHooksAdapter
+
+详细文档：docs/integration/openclaw_integration_modes.md
 """
 
 from adapters.openclaw.adapter import OpenClawHostAdapter
@@ -35,23 +40,39 @@ from adapters.openclaw.hook_contract import (
     ShadowOutput,
 )
 
+# Notification Mode 适配器（正式工程面）
+from adapters.openclaw.notification_adapter import (
+    WakeResult,
+    OpenClawNotificationAdapter,
+    OpenClawCommandNotificationAdapter,
+)
+
+# Hooks-Live Mode 适配器（MVP）
+from adapters.openclaw.hooks_adapter import (
+    HooksWakeResult,
+    OpenClawHooksAdapter,
+)
+
 __all__ = [
-    # Adapter
+    # Shadow Mode（正式工程面）
     "OpenClawHostAdapter",
-    # Explain Bridge
     "ExplainBridge",
     "AdapterExplainOutput",
-    # Shadow Runtime
     "ShadowRuntime",
     "ShadowRunResult",
-    # Runtime Trace
     "RuntimeTrace",
     "build_runtime_trace",
-    # Debug Render
     "render_shadow_run",
     # Hook Contract (Protocols)
     "HostOutputSink",
     "ExplainPayload",
     "GovernanceProcessor",
     "ShadowOutput",
+    # Notification Mode（正式工程面）
+    "WakeResult",
+    "OpenClawNotificationAdapter",
+    "OpenClawCommandNotificationAdapter",
+    # Hooks-Live Mode（MVP）
+    "HooksWakeResult",
+    "OpenClawHooksAdapter",
 ]
