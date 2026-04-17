@@ -1,7 +1,11 @@
 # Block 场景 fixture
 # assignee 和 reviewer 相同，应触发 rule-reviewer-must-differ
+# handoff 和 conflict 字段设为合规值，确保只触发目标规则
 
 task_type: "C"
 assignee: "developer"
 reviewer: "developer"
+direct_output: "false"
+handoff: "true"
+conflict: "false"
 session_id: "sess-block-001"

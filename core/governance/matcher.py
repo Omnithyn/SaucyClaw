@@ -62,10 +62,24 @@ def _evaluate_field(field_name: str, condition: Condition, input_data: dict) -> 
 
 
 def evaluate_rule(rule: GovernanceRule, input_data: dict) -> bool:
-    """评估规则的所有条件是否命中。
+    """评估规则是否合规。
 
-    Phase 0-1: 单层条件，所有条件为 AND 关系（全部命中 = 规则命中）。
+    两段式评估（Phase 1.3）：
+    1. applies_when：规则适用性。空 = 始终适用；不满足 = 规则不适用（返回 True，不违规）
+    2. conditions：合规性检查。全部满足 = 合规（True）；任一不满足 = 违规（False）
+
+    Phase 0-1: 单层条件，conditions 为 AND 关系。
+    Phase 1.3: applies_when 同样为单层 AND-only，不支持 OR/NOT/分组。
     """
+    # 1) 先判适用性
+    if rule.applies_when:
+        if not all(
+            _evaluate_field(cond.field, cond, input_data)
+            for cond in rule.applies_when
+        ):
+            return True  # 不适用 = 不违规
+
+    # 2) 再判合规性
     if not rule.conditions:
         return True
 

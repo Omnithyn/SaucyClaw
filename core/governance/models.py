@@ -25,6 +25,7 @@ class RoleDefinition:
     """智能体角色定义。"""
     id: str
     name: str
+    description: str = ""
     capabilities: list[str] = field(default_factory=list)
     permissions: dict = field(default_factory=dict)
     handoff_to: list[str] = field(default_factory=list)
@@ -38,6 +39,7 @@ class TaskType:
     description: str
     required_roles: list[str] = field(default_factory=list)
     review_required: bool = False
+    allowed_roles: list[str] = field(default_factory=list)
     blocking_rules: list[str] = field(default_factory=list)
 
 
@@ -48,6 +50,7 @@ class GovernanceRule:
     conditions 仅支持单层简单结构，不支持 and/or 嵌套。
     severity 只允许: info, warn, review, block
     on_hit 只允许: Allow, Review Required, Block, Escalate
+    applies_when: 规则适用前提，Phase 1.3 与 conditions 一样，均为单层 AND-only 条件列表。
     """
     id: str
     task_type: str
@@ -55,6 +58,12 @@ class GovernanceRule:
     conditions: list[Condition]
     severity: str
     on_hit: str
+    applies_when: list[Condition] = field(default_factory=list)
+    # Phase 1.7: 规则元数据
+    category: str = ""  # separation_of_duties / routing / handoff / escalation
+    source: str = ""    # 规则来源文档
+    rationale: str = ""  # 规则理由
+    risk_level: str = ""  # low / medium / high
 
 
 @dataclass(frozen=True)

@@ -2,7 +2,7 @@
 
 ## 一、地位
 
-本文件是 SaucyClaw 的系统级主规范文件。  
+本文件是 SaucyClaw 的系统级主规范文件。
 当其他治理文件与本文件冲突时，以本文件为准。
 
 适用范围包括：
@@ -31,14 +31,24 @@
 
 ## 二、系统定位
 
-SaucyClaw 是一个 **agent hardness engineering 基线工程**。
+SaucyClaw 是一个 **多智能体治理 Harness**。
 
 它的目标不是简单地让更多 agent 一起工作，而是构建一套：
 
-1. 强大且受约束的 agent 团队
-2. 角色边界清晰的协作机制
-3. 可评测、可回放、可回归的团队工程能力
-4. 可映射到不同 agent 工具链的治理与方法底座
+1. **以本体、证据、治理规则为核心的治理体系**
+   - 角色、任务类型、约束的结构化定义（本体模型）
+   - 执行记录沉淀、教训积累（证据与记忆）
+   - 可配置、可解释、可验证的治理规则引擎
+   - 运行时可解释、可追溯的能力
+
+2. **可插拔的宿主桥接层**
+   - 支持多种智能体运行时（OpenClaw、OpenHarness、Hermes 等）
+   - 不绑定特定 runtime，保持治理能力的可迁移性
+
+3. **持续进化的治理能力**
+   - 回归验证体系
+   - 规则效能评估
+   - 规则自适应优化（未来）
 
 OpenClaw 是重要兼容目标，但不是唯一宿主。
 
@@ -46,12 +56,28 @@ OpenClaw 是重要兼容目标，但不是唯一宿主。
 
 SaucyClaw 的系统目标包括：
 
-1. 让 General Manager 保持先判断后调度
-2. 让 specialist 协作而不抢答、不越界
-3. 让 reviewer、evaluator、policy guardian 各司其职
-4. 让 handoff、review、task contract 成为正式机制
-5. 让评测与回归成为团队工程的一部分
-6. 让方法优先于工具而沉淀下来
+### 治理内核层
+1. 提供基于 YAML 的规则定义与动态加载能力
+2. 支持规则的条件匹配与适用性判断（applies_when）
+3. 定义清晰的本体模型（角色、任务类型、约束）
+4. 实现事件 → 匹配 → 证据 → 记忆的完整治理流程
+
+### 解释与证据层
+5. 提供运行时解释能力（explain_matched_rules）
+6. 生成结构化的解释输出包（ExplanationBundle）
+7. 自动沉淀执行证据与教训记忆
+8. 支持回归验证与场景测试
+
+### 宿主桥接层
+9. 提供可插拔的 adapter 体系
+10. 支持多种智能体运行时（OpenClaw、OpenHarness、Hermes）
+11. 保持治理能力与 runtime 的解耦
+
+### 团队协作机制
+12. 让 General Manager 保持先判断后调度
+13. 让 specialist 协作而不抢答、不越界
+14. 让 reviewer、evaluator、policy guardian 各司其职
+15. 让 handoff、review、task contract 成为正式机制
 
 ## 四、组织模型
 
@@ -90,7 +116,35 @@ General Manager 必须先判断属于哪一类，再决定下一步。
 
 ## 七、系统层结构
 
-### 1. Team Layer
+### 1. 治理内核层（Governance Core）
+定义规则、本体、匹配、执行的核心能力：
+- GovernanceRule / RoleDefinition / TaskType（本体模型）
+- match_rules() / evaluate_rule()（规则匹配）
+- load_governance()（规则加载）
+- GovernanceEngine（引擎编排）
+
+### 2. 解释与证据层（Explanation & Evidence）
+定义运行时解释、证据沉淀、记忆积累的能力：
+- explain_matched_rules()（解释能力）
+- ExplanationBundle（解释输出包）
+- EvidenceGenerator（证据生成）
+- MemoryBuilder（记忆沉淀）
+- 回归验证体系
+
+### 3. 宿主桥接层（Host Bridge）
+定义与外部 runtime 集成的适配能力：
+- Host Adapter（如 OpenClawHostAdapter）
+- ExplainBridge（解释能力桥接）
+- Shadow Mode（不改变 runtime 契约）
+
+### 4. 平台化演进层（Platform Evolution）[未来]
+定义可视化、配置化、资产化的能力：
+- 治理规则可视化编辑器
+- 治理资产库（规则库/场景库/最佳实践）
+- 跨 runtime 治理能力迁移
+- 规则自适应优化
+
+### 5. Team Layer
 定义角色与协作关系：
 - General Manager
 - Specialists
@@ -98,7 +152,7 @@ General Manager 必须先判断属于哪一类，再决定下一步。
 - Evaluator
 - Policy Guardian
 
-### 2. Constraint Layer
+### 6. Constraint Layer
 定义边界、纪律与关键检查点：
 - 角色边界
 - 启动条件
@@ -106,19 +160,12 @@ General Manager 必须先判断属于哪一类，再决定下一步。
 - review 关卡
 - 关键动作检查点
 
-### 3. Evaluation Layer
+### 7. Evaluation Layer
 定义评测与回归工作面：
 - smoke tasks
 - replay scenarios
 - rubrics
 - reports
-
-### 4. Portability Layer
-定义跨工具映射与入口适配：
-- OpenClaw
-- Codex
-- Claude
-- 其他 agent 工作方式
 
 ## 八、授权边界
 

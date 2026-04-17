@@ -37,16 +37,16 @@ if [ $TITLE_LENGTH -gt 72 ]; then
 fi
 
 # 检查是否以类型开头 (feat|fix|docs|style|refactor|test|chore|perf|revert)
-if ! echo "$TITLE" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|revert)(\(.+\))?: [A-Za-z0-9]"; then
+if ! echo "$TITLE" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|revert)(\(.+\))?: ."; then
     echo -e "${RED}❌ 提交信息格式不符合规范${NC}"
     echo ""
     echo "正确格式："
-    echo "  type(scope): description"
+    echo "  type(scope): description（支持中文）"
     echo ""
     echo "示例："
-    echo "  feat(agent): add create_agent_role script"
-    echo "  fix(lint): resolve trailing whitespace issue"
-    echo "  docs(readme): update installation guide"
+    echo "  feat(profiles): 新增 OpenHarness 和 Hermes profile"
+    echo "  fix(adapter): 修复 hooks 发送超时问题"
+    echo "  docs(readme): 更新架构说明"
     echo ""
     echo "可用类型："
     echo "  • feat   - 新功能"

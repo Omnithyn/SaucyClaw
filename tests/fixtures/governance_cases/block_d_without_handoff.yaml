@@ -1,0 +1,12 @@
+task_type: "D"
+assignee: "manager"
+reviewer: "reviewer"
+direct_output: "false"
+handoff: "false"
+conflict: "false"
+session_id: "case-004"
+
+expected:
+  decision: "Block"
+  matched_rules:
+    - "rule-handoff-required"

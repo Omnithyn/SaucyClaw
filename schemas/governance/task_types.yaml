@@ -1,13 +1,67 @@
 # 治理本体：任务类型定义
 # 来源：system/ORCHESTRATION.md 中的 A-E 分类
-# Phase 0-1 只实现 C 类（单人执行 + 审查）
+# Phase 0-1 只实现 C 类，Phase 1.2 扩展全部 5 类
 
 task_types:
+  - id: "A"
+    name: "直接闭环"
+    description: "General Manager 可直接闭环的任务，无需 specialist 和 reviewer"
+    required_roles:
+      - "manager"
+    review_required: false
+    allowed_roles:
+      - "manager"
+      - "orchestrator"
+    blocking_rules: []
+
+  - id: "B"
+    name: "专家执行"
+    description: "需 specialist 执行，无需 reviewer"
+    required_roles:
+      - "specialist"
+    review_required: false
+    allowed_roles:
+      - "manager"
+      - "specialist"
+    blocking_rules:
+      - "rule-specialist-not-direct-output"
+
   - id: "C"
     name: "单人执行 + 审查"
     description: "适用于需要单角色执行并经独立审查的任务"
     required_roles:
       - "specialist"
     review_required: true
+    allowed_roles:
+      - "manager"
+      - "specialist"
+      - "reviewer"
     blocking_rules:
       - "rule-reviewer-must-differ"
+      - "rule-specialist-not-direct-output"
+
+  - id: "D"
+    name: "多阶段任务"
+    description: "需拆解阶段、handoff 流转、阶段末尾需 review"
+    required_roles:
+      - "specialist"
+    review_required: true
+    allowed_roles:
+      - "manager"
+      - "specialist"
+      - "reviewer"
+    blocking_rules:
+      - "rule-reviewer-must-differ"
+      - "rule-handoff-required"
+      - "rule-specialist-not-direct-output"
+
+  - id: "E"
+    name: "研究分析"
+    description: "整理缺口和风险，需等待条件补足"
+    required_roles:
+      - "manager"
+    review_required: false
+    allowed_roles:
+      - "manager"
+      - "orchestrator"
+    blocking_rules: []

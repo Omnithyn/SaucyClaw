@@ -1,7 +1,10 @@
 # Allow 场景 fixture
-# assignee 和 reviewer 不同，不应触发阻断规则
+# 不应触发任何规则：assignee/reviewer 不同、无直接输出、有 handoff、无冲突
 
 task_type: "C"
-assignee: "developer"
+assignee: "manager"
 reviewer: "reviewer"
+direct_output: "false"
+handoff: "true"
+conflict: "false"
 session_id: "sess-allow-001"

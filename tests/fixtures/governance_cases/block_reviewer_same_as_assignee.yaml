@@ -1,0 +1,12 @@
+task_type: "C"
+assignee: "manager"
+reviewer: "manager"
+direct_output: "false"
+handoff: "true"
+conflict: "false"
+session_id: "case-001"
+
+expected:
+  decision: "Block"
+  matched_rules:
+    - "rule-reviewer-must-differ"

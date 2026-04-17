@@ -27,41 +27,22 @@ def reviewer_must_differ_rule() -> GovernanceRule:
     )
 
 
-@pytest.fixture
-def multi_condition_rule() -> GovernanceRule:
-    """多条件 AND 规则。"""
-    return GovernanceRule(
-        id="rule-multi",
-        task_type="C",
-        description="多条件测试",
-        conditions=[
-            Condition(field="assignee", op="!=", value_from="reviewer"),
-            Condition(field="task_type", op="==", value="C"),
-        ],
-        severity="block",
-        on_hit="Block",
-    )
-
-
 # ---------------------------------------------------------------------------
-# evaluate_rule 测试
+# evaluate_rule 测试 — Phase 0-1 原有
 # ---------------------------------------------------------------------------
 
 class TestEvaluateRule:
     def test_block_scenario(self, reviewer_must_differ_rule):
         """assignee == reviewer → 条件不命中 → 规则被触发（有违规）。"""
         inp = {"assignee": "developer", "reviewer": "developer"}
-        # 条件 assignee != reviewer 为 False → evaluate_rule 返回 False
         assert evaluate_rule(reviewer_must_differ_rule, inp) is False
 
     def test_allow_scenario(self, reviewer_must_differ_rule):
         """assignee != reviewer → 条件命中 → 规则不被触发（无违规）。"""
         inp = {"assignee": "developer", "reviewer": "reviewer"}
-        # 条件 assignee != reviewer 为 True → evaluate_rule 返回 True
         assert evaluate_rule(reviewer_must_differ_rule, inp) is True
 
     def test_static_value_equals(self):
-        """condition with static value, == operator."""
         rule = GovernanceRule(
             id="t1",
             task_type="C",
@@ -109,7 +90,6 @@ class TestEvaluateRule:
         assert evaluate_rule(rule, {"metadata": {"key": "val"}}) is True
 
     def test_exists_operator_false(self):
-        """字段不存在时 exists 返回 False，all([]) 的 fallback。"""
         rule = GovernanceRule(
             id="t4",
             task_type="C",
@@ -118,11 +98,6 @@ class TestEvaluateRule:
             severity="info",
             on_hit="Allow",
         )
-        # 字段 metadata 不在 input 中，_evaluate_field 对 exists 的特殊处理：
-        # 字段不在 input 中 → 检查 op == "exists" → True
-        # 但 metadata 的值是 None（因为 key 不存在），所以走到 "exists" 分支 → actual is not None
-        # 等等，字段不在 input 中 → 直接返回 op == "exists" → True
-        # 所以这个测试应该是 True
         assert evaluate_rule(rule, {"other_field": 1}) is True
 
     def test_empty_conditions_always_true(self):
@@ -166,12 +141,11 @@ class TestEvaluateRule:
 
 
 # ---------------------------------------------------------------------------
-# match_rules 测试
+# match_rules 测试 — Phase 0-1 原有
 # ---------------------------------------------------------------------------
 
 class TestMatchRules:
     def test_block_input_matches(self):
-        """Block 场景应匹配到规则（assignee == reviewer → 条件不通过 → 规则触发）。"""
         rules = [
             GovernanceRule(
                 id="r1",
@@ -189,7 +163,6 @@ class TestMatchRules:
         assert matched[0].id == "r1"
 
     def test_allow_input_no_match(self):
-        """Allow 场景不应匹配到阻断规则（assignee != reviewer → 条件通过 → 规则不触发）。"""
         rules = [
             GovernanceRule(
                 id="r1",
@@ -206,7 +179,6 @@ class TestMatchRules:
         assert matched == []
 
     def test_multiple_rules_partial_match(self):
-        """多条规则中部分触发。"""
         rules = [
             GovernanceRule(
                 id="r-hit",
@@ -229,7 +201,259 @@ class TestMatchRules:
                 on_hit="Allow",
             ),
         ]
-        # flag=True → r-hit 条件通过（不触发），r-miss 条件不通过（触发）
         matched = match_rules(rules, {"flag": True})
         assert len(matched) == 1
         assert matched[0].id == "r-miss"
+
+
+# ---------------------------------------------------------------------------
+# Phase 1.2 新增规则测试
+# ---------------------------------------------------------------------------
+
+class TestPhase12Rules:
+
+    # --- rule-specialist-not-direct-output ---
+    # 合规检查风格：direct_output 必须为 "false"（输出需经 review）
+    # Phase 1.3: 通过 applies_when 限定仅 specialist/developer 适用
+
+    def test_specialist_direct_output_blocked(self):
+        """specialist 的 direct_output 为 true → 适用且违规 → Block。"""
+        rule = GovernanceRule(
+            id="rule-specialist-not-direct-output",
+            task_type="C",
+            description="specialist 不得直接输出最终答案给 CEO",
+            applies_when=[
+                Condition(field="assignee", op="in", value=["specialist", "developer"]),
+            ],
+            conditions=[
+                Condition(field="direct_output", op="==", value="false"),
+            ],
+            severity="block",
+            on_hit="Block",
+        )
+        inp = {"assignee": "specialist", "direct_output": "true"}
+        # applies_when: True, conditions: False → evaluate=False → 违规
+        matched = match_rules([rule], inp)
+        assert len(matched) == 1
+        assert matched[0].on_hit == "Block"
+
+    def test_specialist_via_reviewer_allowed(self):
+        """specialist 的 direct_output 为 false → 适用且合规。"""
+        rule = GovernanceRule(
+            id="rule-specialist-not-direct-output",
+            task_type="C",
+            description="specialist 不得直接输出最终答案给 CEO",
+            applies_when=[
+                Condition(field="assignee", op="in", value=["specialist", "developer"]),
+            ],
+            conditions=[
+                Condition(field="direct_output", op="==", value="false"),
+            ],
+            severity="block",
+            on_hit="Block",
+        )
+        inp = {"assignee": "specialist", "direct_output": "false", "reviewer": "reviewer"}
+        # applies_when: True, conditions: True → evaluate=True → match_rules=[]
+        matched = match_rules([rule], inp)
+        assert matched == []
+
+    def test_non_specialist_direct_output_allowed(self):
+        """manager 的 direct_output 为 true → 不适用 → 不违规。"""
+        rule = GovernanceRule(
+            id="rule-specialist-not-direct-output",
+            task_type="C",
+            description="specialist 不得直接输出最终答案给 CEO",
+            applies_when=[
+                Condition(field="assignee", op="in", value=["specialist", "developer"]),
+            ],
+            conditions=[
+                Condition(field="direct_output", op="==", value="false"),
+            ],
+            severity="block",
+            on_hit="Block",
+        )
+        inp = {"assignee": "manager", "direct_output": "true"}
+        # applies_when: manager not in [...] → False → 不适用 → evaluate=True
+        matched = match_rules([rule], inp)
+        assert matched == []
+
+    # --- rule-handoff-required ---
+    # 合规检查风格：handoff 必须为 "true"
+    # Phase 1.3: 通过 applies_when 限定仅 D 类任务适用
+
+    def test_d_task_no_handoff_blocked(self):
+        """D 类任务的 handoff 为 false → 适用且违规 → Block。"""
+        rule = GovernanceRule(
+            id="rule-handoff-required",
+            task_type="D",
+            description="多阶段任务进入 review 前必须有 handoff 记录",
+            applies_when=[
+                Condition(field="task_type", op="==", value="D"),
+            ],
+            conditions=[
+                Condition(field="handoff", op="==", value="true"),
+            ],
+            severity="block",
+            on_hit="Block",
+        )
+        inp = {"task_type": "D", "handoff": "false", "reviewer": "reviewer"}
+        # applies_when: True, conditions: False → evaluate=False → 违规
+        matched = match_rules([rule], inp)
+        assert len(matched) == 1
+        assert matched[0].on_hit == "Block"
+
+    def test_d_task_with_handoff_allowed(self):
+        """D 类任务的 handoff 为 true → 适用且合规。"""
+        rule = GovernanceRule(
+            id="rule-handoff-required",
+            task_type="D",
+            description="多阶段任务进入 review 前必须有 handoff 记录",
+            applies_when=[
+                Condition(field="task_type", op="==", value="D"),
+            ],
+            conditions=[
+                Condition(field="handoff", op="==", value="true"),
+            ],
+            severity="block",
+            on_hit="Block",
+        )
+        inp = {"task_type": "D", "handoff": "true", "reviewer": "reviewer"}
+        # applies_when: True, conditions: True → evaluate=True → match_rules=[]
+        matched = match_rules([rule], inp)
+        assert matched == []
+
+    def test_c_task_handoff_not_applicable(self):
+        """C 类任务的 handoff 为 false → 不适用 → 不违规。"""
+        rule = GovernanceRule(
+            id="rule-handoff-required",
+            task_type="D",
+            description="多阶段任务进入 review 前必须有 handoff 记录",
+            applies_when=[
+                Condition(field="task_type", op="==", value="D"),
+            ],
+            conditions=[
+                Condition(field="handoff", op="==", value="true"),
+            ],
+            severity="block",
+            on_hit="Block",
+        )
+        inp = {"task_type": "C", "handoff": "false", "reviewer": "reviewer"}
+        # applies_when: "C" != "D" → False → 不适用 → evaluate=True
+        matched = match_rules([rule], inp)
+        assert matched == []
+
+    # --- rule-restricted-routing ---
+    # 合规检查风格：assignee 必须在 [manager, orchestrator] 中
+
+    def test_a_task_wrong_assignee_blocked(self):
+        """assignee 为 developer → 不在允许列表中 → 违规。"""
+        rule = GovernanceRule(
+            id="rule-restricted-routing",
+            task_type="A",
+            description="A 类任务只能由 manager 或 orchestrator 处理",
+            conditions=[
+                Condition(field="assignee", op="in", value=["manager", "orchestrator"]),
+            ],
+            severity="block",
+            on_hit="Block",
+        )
+        inp = {"task_type": "A", "assignee": "developer"}
+        # "developer" in [manager,orchestrator] → False → 违规
+        matched = match_rules([rule], inp)
+        assert len(matched) == 1
+        assert matched[0].on_hit == "Block"
+
+    def test_a_task_manager_allowed(self):
+        """assignee 为 manager → 条件通过 → 合规。"""
+        rule = GovernanceRule(
+            id="rule-restricted-routing",
+            task_type="A",
+            description="A 类任务只能由 manager 或 orchestrator 处理",
+            conditions=[
+                Condition(field="assignee", op="in", value=["manager", "orchestrator"]),
+            ],
+            severity="block",
+            on_hit="Block",
+        )
+        inp = {"task_type": "A", "assignee": "manager"}
+        # "manager" in [manager,orchestrator] → True → evaluate=True → match_rules=[]
+        matched = match_rules([rule], inp)
+        assert matched == []
+
+    # --- rule-escalate-on-conflict ---
+    # 合规检查风格：conflict 必须为 "false"（无冲突）
+
+    def test_conflict_triggers_escalate(self):
+        """存在冲突 → conflict 为 true → 条件不通过 → 触发升级。"""
+        rule = GovernanceRule(
+            id="rule-escalate-on-conflict",
+            task_type="C",
+            description="方向、范围或输入不足冲突时必须升级",
+            conditions=[
+                Condition(field="conflict", op="==", value="false"),
+            ],
+            severity="block",
+            on_hit="Escalate",
+        )
+        inp = {"conflict": "true"}
+        # "true" == "false" → False → evaluate=False → match_rules=[rule]
+        matched = match_rules([rule], inp)
+        assert len(matched) == 1
+        assert matched[0].on_hit == "Escalate"
+
+    def test_no_conflict_no_escalate(self):
+        """无冲突 → conflict 为 false → 条件通过 → 不触发升级。"""
+        rule = GovernanceRule(
+            id="rule-escalate-on-conflict",
+            task_type="C",
+            description="方向、范围或输入不足冲突时必须升级",
+            conditions=[
+                Condition(field="conflict", op="==", value="false"),
+            ],
+            severity="block",
+            on_hit="Escalate",
+        )
+        inp = {"conflict": "false"}
+        # "false" == "false" → True → evaluate=True → match_rules=[]
+        matched = match_rules([rule], inp)
+        assert matched == []
+
+    # --- 正向路由场景 ---
+
+    def test_specialist_to_reviewer_with_handoff_allowed(self):
+        """specialist 输出给 reviewer 且 direct_output=false → 所有规则合规。"""
+        rules = [
+            GovernanceRule(
+                id="rule-specialist-not-direct-output",
+                task_type="C",
+                description="specialist 不得直接输出最终答案给 CEO",
+                applies_when=[
+                    Condition(field="assignee", op="in", value=["specialist", "developer"]),
+                ],
+                conditions=[
+                    Condition(field="direct_output", op="==", value="false"),
+                ],
+                severity="block",
+                on_hit="Block",
+            ),
+            GovernanceRule(
+                id="rule-reviewer-must-differ",
+                task_type="C",
+                description="审查者不能与执行者相同",
+                conditions=[
+                    Condition(field="assignee", op="!=", value_from="reviewer"),
+                ],
+                severity="block",
+                on_hit="Block",
+            ),
+        ]
+        inp = {
+            "assignee": "specialist",
+            "reviewer": "reviewer",
+            "direct_output": "false",
+            "handoff": "true",
+        }
+        # specialist rule: applies_when True, conditions True → pass
+        # reviewer rule: "specialist" != "reviewer" → True → pass
+        matched = match_rules(rules, inp)
+        assert matched == []
