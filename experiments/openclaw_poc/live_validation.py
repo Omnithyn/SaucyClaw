@@ -40,13 +40,13 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from core.governance.loader import load_governance
-from core.engine.orchestrator import GovernanceEngine
-from adapters.openclaw.hooks_adapter import OpenClawHooksAdapter, HooksWakeResult
-from adapters.openclaw.explain_bridge import ExplainBridge
-from core.config import load_notification_config, ensure_config_exists
-from stores.file.evidence.store import FileEvidenceStore
-from stores.file.memory.store import FileMemoryStore
+from core.governance.loader import load_governance  # noqa: E402
+from core.engine.orchestrator import GovernanceEngine  # noqa: E402
+from adapters.openclaw.hooks_adapter import OpenClawHooksAdapter, HooksWakeResult  # noqa: E402
+from adapters.openclaw.explain_bridge import ExplainBridge  # noqa: E402
+from core.config import load_notification_config, ensure_config_exists  # noqa: E402
+from stores.file.evidence.store import FileEvidenceStore  # noqa: E402
+from stores.file.memory.store import FileMemoryStore  # noqa: E402
 
 
 FIXTURES_DIR = PROJECT_ROOT / "tests" / "fixtures" / "governance_cases"
@@ -249,7 +249,7 @@ def main() -> None:
     print("=" * 60)
     print("OpenClaw Live Validation (hooks/agent)")
     print("=" * 60)
-    print(f"[live] Gateway: configured")
+    print("[live] Gateway: configured")
     print(f"[live] Output directory: {output_dir}")
 
     # 加载治理规则

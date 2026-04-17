@@ -82,9 +82,9 @@ def verify_evidence_consistency(validation_dir: Path) -> bool:
             mode = evidence.get("mode", "unknown")
             success = evidence.get("success", False)
             error = evidence.get("error", "N/A")
-            print(f"  类型: pre-send failure")
+            print("  类型: pre-send failure")
             print(f"  模式: {mode}, 成功: {success}, 错误: {error}")
-            print(f"  说明: 发送前失败，无需 payload 文件")
+            print("  说明: 发送前失败，无需 payload 文件")
             pre_send_failure_count += 1
         else:
             # A. 已发送类证据
@@ -109,7 +109,7 @@ def verify_evidence_consistency(validation_dir: Path) -> bool:
                 mode = evidence.get("mode", "unknown")
                 success = evidence.get("success", False)
                 status = evidence.get("status_code", "N/A")
-                print(f"  类型: sent evidence")
+                print("  类型: sent evidence")
                 print(f"  模式: {mode}, 成功: {success}, 状态码: {status}")
                 print(f"  payload 与文件一致: {payload_file.name}")
                 sent_count += 1
@@ -122,7 +122,7 @@ def verify_evidence_consistency(validation_dir: Path) -> bool:
         print()
 
     # 输出统计
-    print(f"证据分类统计:")
+    print("证据分类统计:")
     print(f"  sent evidence: {sent_count}")
     print(f"  pre-send failure evidence: {pre_send_failure_count}")
     print()

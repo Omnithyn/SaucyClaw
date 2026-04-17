@@ -62,7 +62,7 @@ def build_runtime_trace(
     # has_explanation: 结果侧是否真的有 explanation
     has_explanation = (
         run_result.enhanced_output is not None
-        and run_result.enhanced_output.explanation_bundle is not None
+        and run_result.enhanced_output.explanation_bundle is not None  # noqa: W503
     )
 
     # severity: 从 explanation_bundle 的 explanations 中推导最高风险级别

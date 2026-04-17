@@ -10,7 +10,7 @@ from pathlib import Path
 from adapters.openclaw.adapter import OpenClawHostAdapter
 from adapters.openclaw.explain_bridge import ExplainBridge
 from adapters.openclaw.runtime_trace import RuntimeTrace, build_runtime_trace
-from adapters.openclaw.shadow_runtime import ShadowRuntime, ShadowRunResult
+from adapters.openclaw.shadow_runtime import ShadowRuntime
 from core.engine.orchestrator import GovernanceEngine
 from core.governance.loader import load_governance
 from stores.file.evidence.store import FileEvidenceStore

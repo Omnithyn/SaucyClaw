@@ -9,16 +9,14 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-import sys
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from adapters.openclaw.hooks_adapter import (
+from adapters.openclaw.hooks_adapter import (  # noqa: E402
     _build_hook_agent_payload,
     OpenClawHooksAdapter,
     HooksWakeResult,

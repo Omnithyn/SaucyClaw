@@ -10,13 +10,13 @@ import pytest
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from stores.protocols import GateResult
-from adapters.openclaw.notification_adapter import (
+from stores.protocols import GateResult  # noqa: E402
+from adapters.openclaw.notification_adapter import (  # noqa: E402
     OpenClawNotificationAdapter,
     WakeResult,
     _build_openclaw_payload,
 )
-from experiments.openclaw_poc.mock_gateway import (
+from experiments.openclaw_poc.mock_gateway import (  # noqa: E402
     start_mock_server_in_background,
     stop_mock_server,
     clear_received,

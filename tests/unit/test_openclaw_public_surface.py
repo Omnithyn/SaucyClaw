@@ -7,12 +7,10 @@ M9-R2 — OpenClaw 接入面 Hard Closure
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-import pytest
-
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-import sys
 sys.path.insert(0, str(PROJECT_ROOT))
 
 

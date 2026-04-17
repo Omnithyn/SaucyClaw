@@ -17,23 +17,23 @@ M1 — 宿主接入可交付包演示。
 from __future__ import annotations
 
 import sys
+import tempfile
+import yaml
 from pathlib import Path
 
 # 确保项目根目录在 Python 路径中
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from core.governance.loader import load_governance
-from core.engine.orchestrator import GovernanceEngine
-from adapters.openclaw.adapter import OpenClawHostAdapter
-from adapters.openclaw.explain_bridge import ExplainBridge
-from adapters.openclaw.shadow_runtime import ShadowRuntime
-from adapters.openclaw.runtime_trace import build_runtime_trace
-from adapters.openclaw.debug_render import render_shadow_run
-from stores.file.evidence.store import FileEvidenceStore
-from stores.file.memory.store import FileMemoryStore
-import tempfile
-import yaml
+from core.governance.loader import load_governance  # noqa: E402
+from core.engine.orchestrator import GovernanceEngine  # noqa: E402
+from adapters.openclaw.adapter import OpenClawHostAdapter  # noqa: E402
+from adapters.openclaw.explain_bridge import ExplainBridge  # noqa: E402
+from adapters.openclaw.shadow_runtime import ShadowRuntime  # noqa: E402
+from adapters.openclaw.runtime_trace import build_runtime_trace  # noqa: E402
+from adapters.openclaw.debug_render import render_shadow_run  # noqa: E402
+from stores.file.evidence.store import FileEvidenceStore  # noqa: E402
+from stores.file.memory.store import FileMemoryStore  # noqa: E402
 
 
 def main() -> None:

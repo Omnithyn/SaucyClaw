@@ -5,19 +5,16 @@
 - 所有失败分支都落盘 evidence
 """
 import json
-import os
+import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-import sys
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from experiments.openclaw_poc.run_poc import run_scenario, ValidationEvidence
+from experiments.openclaw_poc.run_poc import run_scenario  # noqa: E402
 
 
 class TestDecisionMismatchBranch:

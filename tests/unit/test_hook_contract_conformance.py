@@ -9,8 +9,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 
 # ---------------------------------------------------------------------------
 # 层 1：方法/属性存在 + 层 2：最小行为成立
@@ -242,8 +240,6 @@ class TestShadowRuntimeConformsToShadowOutput:
 
     def test_process_and_write_records_to_adapter_write_back(self, tmp_path):
         """层 2：process_and_write 内部调用 adapter.write_back。"""
-        from adapters.openclaw.shadow_runtime import ShadowRuntime
-
         runtime, adapter = self._make_runtime(tmp_path)
 
         fixtures_dir = Path(__file__).parent.parent / "fixtures"

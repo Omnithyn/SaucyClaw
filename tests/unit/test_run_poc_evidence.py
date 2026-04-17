@@ -6,25 +6,22 @@
 """
 import json
 import os
+import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-import pytest
-
 
 # 添加项目根目录到 sys.path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
-import sys
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from experiments.openclaw_poc.run_poc import (
-    ValidationEvidence,
+from experiments.openclaw_poc.run_poc import (  # noqa: E402
     build_evidence,
     save_validation_bundle,
     run_timeout_test,
 )
-from adapters.openclaw.notification_adapter import WakeResult
+from adapters.openclaw.notification_adapter import WakeResult  # noqa: E402
 
 
 class TestEvidenceSaving:

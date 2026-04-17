@@ -29,14 +29,13 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from adapters.openharness.hooks_adapter import (
+from adapters.openharness.hooks_adapter import (  # noqa: E402
     OpenHarnessHookReceiver,
     OpenHarnessHookProbe,
-    OpenHarnessHookResult,
     build_openharness_hook_response,
     parse_openharness_hook_payload,
 )
-from stores.protocols import GateResult
+from stores.protocols import GateResult  # noqa: E402
 
 
 # ─── 模拟治理策略 ───
@@ -198,8 +197,6 @@ def _test_payload_format_alignment(output_dir: Path) -> None:
     根据 OpenHarness executor.py 第 148 行：
     json={"event": event.value, "payload": payload}
     """
-    from adapters.openharness.hooks_adapter import parse_openharness_hook_payload
-
     # 模拟 OpenHarness 发送的格式
     raw = {
         "event": "pre_tool_use",
@@ -232,8 +229,6 @@ def _test_response_structure(output_dir: Path) -> None:
     - success = response.is_success (2xx)
     - blocked = hook.block_on_failure and not success
     """
-    from stores.protocols import GateResult
-
     # Allow 响应
     allow_result = GateResult(
         decision="Allow", reason="ok", matched_rules=[], evidence_ids=[], suggestions=[]

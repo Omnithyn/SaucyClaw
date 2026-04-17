@@ -14,8 +14,6 @@ import inspect
 import runpy
 from pathlib import Path
 
-import pytest
-
 # ---------------------------------------------------------------------------
 # a. Protocol shape tests — 验证 Protocol 签名与实际类一致
 # ---------------------------------------------------------------------------

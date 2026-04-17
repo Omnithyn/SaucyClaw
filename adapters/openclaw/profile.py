@@ -16,7 +16,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from adapters.host_protocols import (
-    HostAdapterProfile,
     HostCapabilities,
     HostMode,
 )

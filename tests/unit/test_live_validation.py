@@ -9,22 +9,22 @@
 from __future__ import annotations
 
 import json
+import sys
 import tempfile
 from pathlib import Path
 
 import pytest
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-import sys
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # 导入 live_validation 模块中的 helper 函数
-from experiments.openclaw_poc.live_validation import (
+from experiments.openclaw_poc.live_validation import (  # noqa: E402
     LiveValidationEvidence,
     build_evidence,
     save_evidence,
 )
-from adapters.openclaw.hooks_adapter import HooksWakeResult
+from adapters.openclaw.hooks_adapter import HooksWakeResult  # noqa: E402
 
 
 class TestLiveValidationEvidence:

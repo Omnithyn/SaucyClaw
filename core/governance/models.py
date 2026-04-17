@@ -62,7 +62,7 @@ class GovernanceRule:
     # Phase 1.7: 规则元数据
     category: str = ""  # separation_of_duties / routing / handoff / escalation
     source: str = ""    # 规则来源文档
-    rationale: str = "" # 规则理由
+    rationale: str = ""  # 规则理由
     risk_level: str = ""  # low / medium / high
 
 

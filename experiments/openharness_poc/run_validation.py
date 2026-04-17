@@ -28,14 +28,12 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from adapters.openharness.hooks_adapter import (
-    OpenHarnessHookReceiver,
+from adapters.openharness.hooks_adapter import (  # noqa: E402
     OpenHarnessHookProbe,
-    OpenHarnessHookResult,
     build_openharness_hook_response,
     parse_openharness_hook_payload,
 )
-from stores.protocols import GateResult
+from stores.protocols import GateResult  # noqa: E402
 
 
 # ─── 模拟治理检查 ───

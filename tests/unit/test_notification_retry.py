@@ -7,23 +7,20 @@
 - OPENCLAW_RETRY_ENABLED=false 禁用 retry
 """
 import os
+import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-import sys
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from experiments.openclaw_poc.notification_retry import (
+from experiments.openclaw_poc.notification_retry import (  # noqa: E402
     RetryConfig,
     is_retryable_error,
     with_retry,
 )
-from adapters.openclaw.notification_adapter import WakeResult
+from adapters.openclaw.notification_adapter import WakeResult  # noqa: E402
 
 
 class TestRetryableErrorDetection:
@@ -190,8 +187,7 @@ class TestRetryIntegrationWithEvidence:
 
     def test_attempts_retried_in_evidence(self):
         """attempts/retried 正确写入 evidence"""
-        with tempfile.TemporaryDirectory() as tmp:
-            output_dir = Path(tmp)
+        with tempfile.TemporaryDirectory():
 
             from experiments.openclaw_poc.run_poc import build_evidence
 
@@ -274,7 +270,7 @@ class TestRetryEnvironmentControl:
             if retry_enabled:
                 result, attempts, retried = with_retry(mock_send, RetryConfig())
             else:
-                result = mock_send()
+                _ = mock_send()
                 attempts = 1
                 retried = False
 

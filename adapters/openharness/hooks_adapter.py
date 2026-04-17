@@ -92,7 +92,7 @@ def parse_openharness_hook_payload(raw: dict[str, Any]) -> tuple[str, dict[str, 
 
 class GovernanceCheckFn(Protocol):
     """治理检查函数接口。"""
-    def __call__(self, event_type: str, payload: dict[str, Any]) -> GateResult: ...
+    def __call__(self, event_type: str, payload: dict[str, Any]) -> GateResult: ...  # noqa: E704
 
 
 class OpenHarnessHookReceiver:

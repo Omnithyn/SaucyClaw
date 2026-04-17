@@ -54,23 +54,22 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from core.governance.loader import load_governance
-from core.engine.orchestrator import GovernanceEngine
-from adapters.openclaw.notification_adapter import OpenClawNotificationAdapter
-from adapters.openclaw.explain_bridge import ExplainBridge
-from experiments.openclaw_poc.notification_retry import (
+from core.governance.loader import load_governance  # noqa: E402
+from core.engine.orchestrator import GovernanceEngine  # noqa: E402
+from adapters.openclaw.notification_adapter import OpenClawNotificationAdapter  # noqa: E402
+from adapters.openclaw.explain_bridge import ExplainBridge  # noqa: E402
+from experiments.openclaw_poc.notification_retry import (  # noqa: E402
     RetryConfig,
-    is_retryable_error,
     with_retry,
 )
-from experiments.openclaw_poc.mock_gateway import (
+from experiments.openclaw_poc.mock_gateway import (  # noqa: E402
     start_mock_server_in_background,
     stop_mock_server,
     clear_received,
     received_payloads,
 )
-from stores.file.evidence.store import FileEvidenceStore
-from stores.file.memory.store import FileMemoryStore
+from stores.file.evidence.store import FileEvidenceStore  # noqa: E402
+from stores.file.memory.store import FileMemoryStore  # noqa: E402
 
 
 FIXTURES_DIR = PROJECT_ROOT / "tests" / "fixtures" / "governance_cases"
@@ -408,10 +407,8 @@ def load_gateway_config() -> tuple[str, dict[str, str], int]:
                 "OPENCLAW_GATEWAY_URL is required for real gateway mode. "
                 "Set it to your OpenClaw webhook URL."
             )
-        gateway_name = "real-gateway"
     else:
         gateway_url = f"http://127.0.0.1:{MOCK_PORT}"
-        gateway_name = "mock-gateway"
 
     headers_str = os.environ.get("OPENCLAW_GATEWAY_HEADERS")
     if headers_str:

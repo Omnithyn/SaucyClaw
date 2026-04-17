@@ -5,13 +5,15 @@ M12 — OpenHarness First Executable Path
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-import sys
 sys.path.insert(0, str(PROJECT_ROOT))
+
+from stores.protocols import GateResult  # noqa: E402
 
 
 class TestParseOpenharnessHookPayload:
@@ -102,8 +104,7 @@ class TestOpenHarnessHookResult:
 class TestOpenHarnessHookReceiver:
     """测试 OpenHarnessHookReceiver。"""
 
-    def _dummy_check(self, event_type: str, payload: dict) -> "GateResult":
-        from stores.protocols import GateResult
+    def _dummy_check(self, event_type: str, payload: dict) -> GateResult:
         return GateResult(
             decision="Allow",
             reason="test",

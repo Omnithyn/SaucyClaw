@@ -5,12 +5,12 @@ M10 — Runtime-Neutral Host Abstraction
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-import sys
 sys.path.insert(0, str(PROJECT_ROOT))
 
 
