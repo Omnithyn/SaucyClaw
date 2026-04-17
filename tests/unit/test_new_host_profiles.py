@@ -54,6 +54,7 @@ class TestOpenHarnessProfile:
         assert "概念验证" in profile.get_maturity(HostMode.SHADOW)
         assert "概念验证" in profile.get_maturity(HostMode.NOTIFICATION)
         assert "MVP" in profile.get_maturity(HostMode.HOOKS_LIVE)
+        assert "已真实验证" in profile.get_maturity(HostMode.HOOKS_LIVE)
 
     def test_profile_validation_status(self):
         from adapters.openharness.profile import OpenHarnessProfile

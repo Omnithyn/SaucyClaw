@@ -8,6 +8,7 @@
 
 M11 — OpenHarness Recon & Skeleton Profile
 M12 — OpenHarness First Executable Path (hooks_live)
+M13 — OpenHarness Live Validation & Reality Closure
 """
 
 from __future__ import annotations
@@ -26,7 +27,7 @@ from adapters.host_protocols import (
 _OPENHARNESS_MATURITY: dict[HostMode, str] = {
     HostMode.SHADOW: "概念验证（待实现）",
     HostMode.NOTIFICATION: "概念验证（待实现）",
-    HostMode.HOOKS_LIVE: "MVP（最小可执行）",
+    HostMode.HOOKS_LIVE: "MVP（已真实验证）",
 }
 
 # OpenHarness 模式入口模块映射
@@ -62,6 +63,11 @@ class OpenHarnessProfile:
     M12 进展：
     - hooks_live 已进入最小可执行阶段（OpenHarnessHookReceiver + OpenHarnessHookProbe）
     - Block / Allow / failure 三类路径验证通过
+
+    M13 进展：
+    - hooks_live 完成真实验证，5/5 场景通过
+    - Payload 格式与 OpenHarness 源码完全对齐（executor.py:148）
+    - 响应结构与 OpenHarness 判断逻辑完全兼容（executor.py:151-159）
     """
 
     name: str = "openharness"
