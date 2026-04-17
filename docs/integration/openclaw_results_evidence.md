@@ -224,6 +224,6 @@ def build_evidence(
 
 - `docs/integration/openclaw_integration_modes.md` — 三种接入模式说明
 - `docs/integration/openclaw_hooks_contract.md` — Hooks Payload 契约
-- `docs/integration/openclaw_notification_contract.md` — Notification Payload 契约
+- `.local-docs/integration/openclaw_notification_contract.md` — Notification Payload 契约
 - `stores/protocols.py` — GateResult 定义
 - `experiments/openclaw_poc/live_validation.py` — Live validation 实现

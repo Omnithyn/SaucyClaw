@@ -96,7 +96,7 @@
 
 ## 六、参考
 
-- `docs/architecture/runtime_host_abstraction.md` — 宿主抽象架构说明
+- `.local-docs/architecture/runtime_host_abstraction.md` — 宿主抽象架构说明
 - `adapters/host_protocols.py` — 宿主抽象协议
 - `adapters/openclaw/profile.py` — OpenClaw 宿主 profile
 - `docs/integration/openclaw_integration_modes.md` — OpenClaw 接入模式详情

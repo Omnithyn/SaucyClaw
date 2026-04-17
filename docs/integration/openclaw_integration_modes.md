@@ -199,6 +199,6 @@ result = adapter.send_decision(gate_result, explanation_summary)
 ## 七、参考
 
 - `docs/integration/openclaw_hooks_contract.md` — Hooks Payload 契约
-- `docs/integration/openclaw_notification_contract.md` — Notification Payload 契约
+- `.local-docs/integration/openclaw_notification_contract.md` — Notification Payload 契约
 - `docs/integration/openclaw_results_evidence.md` — 结果与证据关系
 - `docs/configuration.md` — 配置说明
