@@ -53,7 +53,7 @@ class TestOpenHarnessProfile:
 
         assert "概念验证" in profile.get_maturity(HostMode.SHADOW)
         assert "概念验证" in profile.get_maturity(HostMode.NOTIFICATION)
-        assert "概念验证" in profile.get_maturity(HostMode.HOOKS_LIVE)
+        assert "MVP" in profile.get_maturity(HostMode.HOOKS_LIVE)
 
     def test_profile_validation_status(self):
         from adapters.openharness.profile import OpenHarnessProfile
@@ -61,10 +61,9 @@ class TestOpenHarnessProfile:
 
         profile = OpenHarnessProfile()
 
-        # All modes are not yet validated
         assert profile.is_validated(HostMode.SHADOW) is False
         assert profile.is_validated(HostMode.NOTIFICATION) is False
-        assert profile.is_validated(HostMode.HOOKS_LIVE) is False
+        assert profile.is_validated(HostMode.HOOKS_LIVE) is True
 
     def test_profile_to_dict(self):
         from adapters.openharness.profile import OpenHarnessProfile

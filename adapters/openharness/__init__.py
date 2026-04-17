@@ -1,13 +1,23 @@
-"""OpenHarness 适配器包（skeleton）。
+"""OpenHarness 适配器包。
 
-M11 — 只定义 profile，adapter 实现待后续阶段完成。
-
-当前已确认能力：
-- shadow: 可通过 mock engine 事件实现（待实现）
-- notification: 可通过 Channel / MessageBus 实现（待实现）
-- hooks_live: 可通过 HTTP Hook (pre_tool_use) 实现（待实现）
+M11 — skeleton profile
+M12 — hooks_live 最小可执行路径
 """
 
 from adapters.openharness.profile import OpenHarnessProfile
+from adapters.openharness.hooks_adapter import (
+    OpenHarnessHookReceiver,
+    OpenHarnessHookProbe,
+    OpenHarnessHookResult,
+    build_openharness_hook_response,
+    parse_openharness_hook_payload,
+)
 
-__all__ = ["OpenHarnessProfile"]
+__all__ = [
+    "OpenHarnessProfile",
+    "OpenHarnessHookReceiver",
+    "OpenHarnessHookProbe",
+    "OpenHarnessHookResult",
+    "build_openharness_hook_response",
+    "parse_openharness_hook_payload",
+]

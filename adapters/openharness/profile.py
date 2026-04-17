@@ -7,6 +7,7 @@
 - 哪些能力已确认，哪些待验证
 
 M11 — OpenHarness Recon & Skeleton Profile
+M12 — OpenHarness First Executable Path (hooks_live)
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from adapters.host_protocols import (
 _OPENHARNESS_MATURITY: dict[HostMode, str] = {
     HostMode.SHADOW: "概念验证（待实现）",
     HostMode.NOTIFICATION: "概念验证（待实现）",
-    HostMode.HOOKS_LIVE: "概念验证（待实现）",
+    HostMode.HOOKS_LIVE: "MVP（最小可执行）",
 }
 
 # OpenHarness 模式入口模块映射
@@ -39,7 +40,7 @@ _OPENHARNESS_ENTRY_POINTS: dict[HostMode, str] = {
 _OPENHARNESS_VALIDATED: dict[HostMode, bool] = {
     HostMode.SHADOW: False,
     HostMode.NOTIFICATION: False,
-    HostMode.HOOKS_LIVE: False,
+    HostMode.HOOKS_LIVE: True,
 }
 
 
@@ -57,7 +58,10 @@ class OpenHarnessProfile:
     - HTTP Hook 是最推荐的 hooks-live 接入方式
     - Channel 系统支持 notification 模式（10+ 消息通道）
     - engine/stream_events.py 提供了清晰的事件结构，适合 shadow mock
-    - 当前只做 skeleton profile，正式 adapter 待后续实现
+
+    M12 进展：
+    - hooks_live 已进入最小可执行阶段（OpenHarnessHookReceiver + OpenHarnessHookProbe）
+    - Block / Allow / failure 三类路径验证通过
     """
 
     name: str = "openharness"
