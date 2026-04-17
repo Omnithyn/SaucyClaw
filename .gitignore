@@ -14,8 +14,12 @@ venv/
 *.db
 .DS_Store
 
-# Runtime agent data
+# Local process docs (plans, progress reports, PoC docs — not for public repo)
+.local-docs/
+
+# Agent configuration files (local-only for AI development)
 CLAUDE.md
+**/AGENTS.md
 .claude/
 openspec/
 .opencode/
