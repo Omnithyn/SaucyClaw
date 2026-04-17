@@ -19,7 +19,6 @@ venv/
 
 # Agent configuration files (local-only for AI development)
 CLAUDE.md
-**/AGENTS.md
 .claude/
 openspec/
 .opencode/
