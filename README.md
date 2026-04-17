@@ -62,6 +62,8 @@ SaucyClaw **不是**：
 │  - 跨 runtime 迁移                                           │
 ├─────────────────────────────────────────────────────────────┤
 │                    宿主桥接层（基础架构已形成）              │
+│  - 宿主抽象协议（HostMode / HostCapabilities）              │
+│  - OpenClaw profile（第一个已落地的 host profile）          │
 │  - OpenClaw adapter（三种接入模式）                         │
 │    - Shadow Mode（正式工程面）                              │
 │    - Notification Mode（正式工程面）                        │
@@ -194,12 +196,14 @@ SaucyClaw/
 
 1. `README.md`（本文件）
 2. `docs/integration/openclaw_integration_modes.md`（OpenClaw 三种接入模式）
-3. `docs/phase/project_alignment_report.md`（项目对齐报告）
-4. `system/SYSTEM_SPEC.md`（系统规范）
-5. `core/governance/models.py`（治理模型）
-6. `core/governance/matcher.py`（规则匹配器）
-7. `adapters/openclaw/__init__.py`（OpenClaw 接入面总入口）
-8. `tests/integration/test_governance_fixtures.py`（回归测试）
+3. `docs/architecture/runtime_host_abstraction.md`（宿主抽象架构）
+4. `docs/integration/runtime_capability_matrix.md`（runtime 能力矩阵）
+5. `docs/phase/project_alignment_report.md`（项目对齐报告）
+6. `system/SYSTEM_SPEC.md`（系统规范）
+7. `core/governance/models.py`（治理模型）
+8. `core/governance/matcher.py`（规则匹配器）
+9. `adapters/host_protocols.py`（宿主抽象协议）
+10. `adapters/openclaw/profile.py`（OpenClaw 宿主 profile）
 
 > 语义裁决说明：若入口文件表达存在差异，以 `system/SYSTEM_SPEC.md` 为准。
 
@@ -222,7 +226,9 @@ SaucyClaw 适合：
 当前阶段，SaucyClaw 已完成：
 - **治理内核**（规则引擎、本体模型、引擎编排）
 - **解释与证据层**（解释能力、证据生成、记忆沉淀）
-- **宿主桥接层基础架构**（三种 OpenClaw 接入模式）
+- **宿主桥接层基础架构**（三种 OpenClaw 接入模式 + 宿主抽象层）
+- **宿主抽象协议**（HostMode / HostCapabilities / HostAdapterProfile）
+- **OpenClaw 首个 host profile**（shadow + notification + hooks-live）
 
 **OpenClaw 接入面当前状态：**
 
@@ -233,7 +239,7 @@ SaucyClaw 适合：
 | Hooks-Live Mode | ⚠️ MVP | 真实 gateway 已打通，无队列/持久化 |
 
 下一步规划：
-- 多 runtime adapter 体系（OpenHarness / Hermes）
+- 多 runtime profile（OpenHarness / Hermes 调研）
 - 治理规则的动态加载与热更新
 - 可视化编辑器与治理资产库
 - 跨 runtime 的治理能力迁移
