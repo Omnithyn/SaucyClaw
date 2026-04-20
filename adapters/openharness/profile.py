@@ -10,6 +10,7 @@ M11 — OpenHarness Recon & Skeleton Profile
 M12 — OpenHarness First Executable Path (hooks_live)
 M13 — OpenHarness Live Validation & Reality Closure
 M14 — Hook Integration Pattern Refinement
+M15 — Inbound Hook Gatekeeping Base Package（已复用）
 """
 
 from __future__ import annotations
@@ -73,6 +74,11 @@ class OpenHarnessProfile:
     M14 说明：
     - hooks_live 属于 inbound_hook_gatekeeping（宿主 POST 到 SaucyClaw 端点）
     - OpenHarness HTTP Hook：executor 在事件点 POST 到远程 URL，SaucyClaw 返回阻断/放行
+
+    M15 说明：
+    - OpenHarness 是 inbound_hook_gatekeeping 公共基座的第一个实现
+    - 已复用公共抽象（GatekeepingResponse、InboundHookResult）
+    - Hermes 预期可复用该基座（待实现）
     """
 
     name: str = "openharness"

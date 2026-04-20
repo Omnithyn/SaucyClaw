@@ -8,6 +8,7 @@
 
 M11 — Hermes Agent Recon & Skeleton Profile
 M14 — Hook Integration Pattern Refinement（预留）
+M15 — Inbound Hook Gatekeeping Base Package（预期复用）
 """
 
 from __future__ import annotations
@@ -65,6 +66,12 @@ class HermesProfile:
     - 若脚本 POST 到 SaucyClaw 端点 → INBOUND_HOOK_GATEKEEPING
     - 若脚本作为 SaucyClaw 调用入口 → OUTBOUND_HOOK_PUSH
     - 当前 skeleton 状态，不指定 hook_pattern（待实现时确定）
+
+    M15 说明（预期复用）：
+    - Hermes 预期可复用 inbound_hook_gatekeeping 公共基座
+    - Hook 脚本可 POST 到 SaucyClaw /governance 端点
+    - 使用 InboundHookReceiver 接收请求，InboundHookProbe 本地验证
+    - 当前 skeleton 状态，待实现时确定具体复用方式
     """
 
     name: str = "hermes"
