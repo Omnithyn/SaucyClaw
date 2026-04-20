@@ -6,7 +6,8 @@
 - 推荐入口
 - 哪些能力已确认，哪些待验证
 
-M11 — OpenHarness Recon & Skeleton Profile
+M11 — Hermes Agent Recon & Skeleton Profile
+M14 — Hook Integration Pattern Refinement（预留）
 """
 
 from __future__ import annotations
@@ -58,6 +59,12 @@ class HermesProfile:
     - Channel 系统支持 9+ 消息平台，适合 notification
     - AIAgent 回调体系清晰，适合 shadow mock
     - 当前只做 skeleton profile，正式 adapter 待后续实现
+
+    M14 说明（预留）：
+    - Hermes 的 hook_pattern 可配置，取决于 hook 脚本实现方式
+    - 若脚本 POST 到 SaucyClaw 端点 → INBOUND_HOOK_GATEKEEPING
+    - 若脚本作为 SaucyClaw 调用入口 → OUTBOUND_HOOK_PUSH
+    - 当前 skeleton 状态，不指定 hook_pattern（待实现时确定）
     """
 
     name: str = "hermes"
@@ -73,6 +80,7 @@ class HermesProfile:
             supports_shadow=True,
             supports_notification=True,
             supports_hooks_live=True,
+            # hook_pattern 待实现时确定，当前 skeleton 状态不指定
         )
 
     def get_entry_point(self, mode: HostMode) -> str | None:

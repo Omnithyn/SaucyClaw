@@ -9,6 +9,7 @@
 M11 — OpenHarness Recon & Skeleton Profile
 M12 — OpenHarness First Executable Path (hooks_live)
 M13 — OpenHarness Live Validation & Reality Closure
+M14 — Hook Integration Pattern Refinement
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from typing import Any
 
 from adapters.host_protocols import (
     HostCapabilities,
+    HookInteractionPattern,
     HostMode,
 )
 
@@ -67,6 +69,10 @@ class OpenHarnessProfile:
     - hooks_live 完成真实验证，5/5 场景通过
     - Payload 格式与 OpenHarness 源码完全对齐（executor.py:148）
     - 响应结构与 OpenHarness 判断逻辑完全兼容（executor.py:151-159）
+
+    M14 说明：
+    - hooks_live 属于 inbound_hook_gatekeeping（宿主 POST 到 SaucyClaw 端点）
+    - OpenHarness HTTP Hook：executor 在事件点 POST 到远程 URL，SaucyClaw 返回阻断/放行
     """
 
     name: str = "openharness"
@@ -82,6 +88,7 @@ class OpenHarnessProfile:
             supports_shadow=True,
             supports_notification=True,
             supports_hooks_live=True,
+            hook_pattern=HookInteractionPattern.INBOUND_HOOK_GATEKEEPING,
         )
 
     def get_entry_point(self, mode: HostMode) -> str | None:

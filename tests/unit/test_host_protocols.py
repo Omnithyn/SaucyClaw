@@ -1,6 +1,7 @@
 """测试宿主抽象协议和 OpenClaw profile。
 
 M10 — Runtime-Neutral Host Abstraction
+M14 — Hook Integration Pattern Refinement
 """
 
 from __future__ import annotations
@@ -164,3 +165,64 @@ class TestOpenClawProfile:
         assert "shadow" in d["capabilities"]
         assert "notification" in d["capabilities"]
         assert "hooks_live" in d["capabilities"]
+
+    def test_profile_hook_pattern(self):
+        """M14: OpenClaw hooks_live 属于 outbound_hook_push。"""
+        from adapters.openclaw.profile import OpenClawProfile
+        from adapters.host_protocols import HookInteractionPattern
+
+        profile = OpenClawProfile()
+        caps = profile.capabilities
+
+        assert caps.hook_pattern == HookInteractionPattern.OUTBOUND_HOOK_PUSH
+
+
+class TestHookInteractionPattern:
+    """M14: 测试 HookInteractionPattern 枚举。"""
+
+    def test_outbound_hook_push_exists(self):
+        from adapters.host_protocols import HookInteractionPattern
+        assert HookInteractionPattern.OUTBOUND_HOOK_PUSH.value == "outbound_hook_push"
+
+    def test_inbound_hook_gatekeeping_exists(self):
+        from adapters.host_protocols import HookInteractionPattern
+        assert HookInteractionPattern.INBOUND_HOOK_GATEKEEPING.value == "inbound_hook_gatekeeping"
+
+
+class TestHostCapabilitiesWithHookPattern:
+    """M14: 测试 HostCapabilities hook_pattern 字段。"""
+
+    def test_capabilities_without_hook_pattern(self):
+        """不支持 hooks_live 时 hook_pattern 为 None。"""
+        from adapters.host_protocols import HostCapabilities, HostMode
+
+        caps = HostCapabilities(
+            modes=[HostMode.SHADOW],
+            supports_shadow=True,
+        )
+        assert caps.hook_pattern is None
+
+    def test_capabilities_with_hook_pattern(self):
+        """支持 hooks_live 时可指定 hook_pattern。"""
+        from adapters.host_protocols import HostCapabilities, HostMode, HookInteractionPattern
+
+        caps = HostCapabilities(
+            modes=[HostMode.HOOKS_LIVE],
+            supports_hooks_live=True,
+            hook_pattern=HookInteractionPattern.OUTBOUND_HOOK_PUSH,
+        )
+        assert caps.hook_pattern == HookInteractionPattern.OUTBOUND_HOOK_PUSH
+
+
+class TestOpenHarnessHookPattern:
+    """M14: 测试 OpenHarness profile hook_pattern。"""
+
+    def test_profile_hook_pattern(self):
+        """OpenHarness hooks_live 属于 inbound_hook_gatekeeping。"""
+        from adapters.openharness.profile import OpenHarnessProfile
+        from adapters.host_protocols import HookInteractionPattern
+
+        profile = OpenHarnessProfile()
+        caps = profile.capabilities
+
+        assert caps.hook_pattern == HookInteractionPattern.INBOUND_HOOK_GATEKEEPING

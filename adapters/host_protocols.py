@@ -4,6 +4,7 @@
 不依赖任何具体 runtime 实现。
 
 M10 — Runtime-Neutral Host Abstraction
+M14 — Hook Integration Pattern Refinement
 """
 
 from __future__ import annotations
@@ -23,6 +24,21 @@ class HostMode(Enum):
     SHADOW = "shadow"
     NOTIFICATION = "notification"
     HOOKS_LIVE = "hooks_live"
+
+
+class HookInteractionPattern(Enum):
+    """Hook 交互形态。
+
+    M14 引入：hooks_live 模式下，SaucyClaw 与宿主的交互方向不同。
+
+    - outbound_hook_push: SaucyClaw 主动调用宿主 hooks API
+      （如 OpenClaw POST /hooks/agent，SaucyClaw 发送治理决策通知）
+
+    - inbound_hook_gatekeeping: 宿主在事件点 POST 到 SaucyClaw 端点
+      （如 OpenHarness HTTP Hook，SaucyClaw 接收请求并返回阻断/放行响应）
+    """
+    OUTBOUND_HOOK_PUSH = "outbound_hook_push"
+    INBOUND_HOOK_GATEKEEPING = "inbound_hook_gatekeeping"
 
 
 @dataclass(frozen=True)
@@ -47,11 +63,16 @@ class HostCapabilities:
     """宿主能力声明。
 
     声明某个 runtime 支持哪些接入模式。
+
+    M14 增加 hook_pattern：
+    - 仅当 supports_hooks_live=True 时有意义
+    - 用于区分 outbound_hook_push 与 inbound_hook_gatekeeping
     """
     modes: list[HostMode]
     supports_shadow: bool = True
     supports_notification: bool = False
     supports_hooks_live: bool = False
+    hook_pattern: HookInteractionPattern | None = None
 
 
 class HostAdapterProfile(Protocol):
