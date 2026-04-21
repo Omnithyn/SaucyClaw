@@ -26,7 +26,9 @@ SCHEMAS_DIR = Path(__file__).parent.parent.parent / "schemas" / "governance"
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 
 
-def _make_engine(tmp_path: Path, rules: list[GovernanceRule]) -> tuple[GovernanceEngine, FileEvidenceStore, FileMemoryStore]:
+def _make_engine(
+    tmp_path: Path, rules: list[GovernanceRule]
+) -> tuple[GovernanceEngine, FileEvidenceStore, FileMemoryStore]:
     evidence_store = FileEvidenceStore(tmp_path / "evidence")
     memory_store = FileMemoryStore(tmp_path / "memory")
     engine = GovernanceEngine(

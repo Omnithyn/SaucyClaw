@@ -119,7 +119,7 @@ class TestHermesProfile:
 
         assert "概念验证" in profile.get_maturity(HostMode.SHADOW)
         assert "概念验证" in profile.get_maturity(HostMode.NOTIFICATION)
-        assert "概念验证" in profile.get_maturity(HostMode.HOOKS_LIVE)
+        assert "最小可执行" in profile.get_maturity(HostMode.HOOKS_LIVE)
 
     def test_profile_validation_status(self):
         from adapters.hermes.profile import HermesProfile
@@ -127,10 +127,11 @@ class TestHermesProfile:
 
         profile = HermesProfile()
 
-        # All modes are not yet validated
+        # Shadow and Notification modes are not yet validated
         assert profile.is_validated(HostMode.SHADOW) is False
         assert profile.is_validated(HostMode.NOTIFICATION) is False
-        assert profile.is_validated(HostMode.HOOKS_LIVE) is False
+        # Hooks_live is validated after M17 implementation
+        assert profile.is_validated(HostMode.HOOKS_LIVE) is True
 
     def test_profile_to_dict(self):
         from adapters.hermes.profile import HermesProfile
