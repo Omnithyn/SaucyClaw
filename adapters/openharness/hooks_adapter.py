@@ -10,31 +10,35 @@
 2. OpenHarnessHookProbe — 模拟 OpenHarness 发送 hook POST，用于本地验证
 
 M12 — OpenHarness First Executable Path
+M16 — Inbound Base Adoption（真正复用公共基座）
+
+复用公共基座：
+- InboundHookResult — 直接复用（字段完全一致）
+- build_gatekeeping_response_from_gate_result — 桥接使用
+- parse_inbound_hook_event_minimal — 桥接使用
 """
 
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from typing import Any, Protocol
 
+from adapters.inbound_hook_protocols import (
+    InboundHookResult,
+    build_gatekeeping_response_from_gate_result,
+    parse_inbound_hook_event_minimal,
+)
 from stores.protocols import GateResult
 
 
-# ─── 结果结构 ───
+# ─── 结果结构（直接复用公共基座）───
+
+# OpenHarnessHookResult 与 InboundHookResult 字段完全一致
+# 直接复用公共基座，无需重复定义
+OpenHarnessHookResult = InboundHookResult
 
 
-@dataclass(frozen=True)
-class OpenHarnessHookResult:
-    """OpenHarness hook 处理结果。"""
-    success: bool
-    blocked: bool
-    error: str | None = None
-    status_code: int | None = None
-    event_type: str | None = None
-
-
-# ─── OpenHarness Hook Payload 契约 ───
+# ─── OpenHarness Hook Payload 契约（桥接公共基座）───
 
 
 def build_openharness_hook_response(
@@ -42,6 +46,8 @@ def build_openharness_hook_response(
     status_code: int = 200,
 ) -> tuple[dict[str, Any], OpenHarnessHookResult]:
     """从 GateResult 构建 OpenHarness hook 响应。
+
+    M16: 桥接公共基座 build_gatekeeping_response_from_gate_result
 
     OpenHarness HTTP Hook 的响应逻辑：
     - 2xx 响应 → hook 成功，继续执行（除非 block_on_failure 且响应非 success）
@@ -51,26 +57,24 @@ def build_openharness_hook_response(
     - Block 决策 → 返回 403 + 阻止标记
     - Allow 决策 → 返回 200 + 通过标记
     """
-    is_block = gate_result.decision == "Block"
+    # 使用公共基座构建 GatekeepingResponse
+    base_response = build_gatekeeping_response_from_gate_result(gate_result)
 
-    if is_block:
-        status_code = 403
-        response_body = {
-            "blocked": True,
-            "reason": gate_result.reason,
-            "matched_rules": gate_result.matched_rules,
-        }
-    else:
-        status_code = 200
-        response_body = {
-            "blocked": False,
-            "reason": gate_result.reason,
-        }
+    # 转换为 OpenHarness 特定的 dict 格式
+    # OpenHarness 期望 {blocked, reason, matched_rules} 结构
+    response_body = {
+        "blocked": base_response.blocked,
+        "reason": base_response.reason,
+    }
 
+    if base_response.blocked:
+        response_body["matched_rules"] = base_response.matched_rules
+
+    # 使用公共基座的 InboundHookResult
     result = OpenHarnessHookResult(
-        success=not is_block,
-        blocked=is_block,
-        status_code=status_code,
+        success=base_response.success,
+        blocked=base_response.blocked,
+        status_code=base_response.status_code,
     )
 
     return response_body, result
@@ -79,24 +83,33 @@ def build_openharness_hook_response(
 def parse_openharness_hook_payload(raw: dict[str, Any]) -> tuple[str, dict[str, Any]]:
     """解析 OpenHarness HTTP Hook 发送的 payload。
 
+    M16: 桥接公共基座 parse_inbound_hook_event_minimal
+
     OpenHarness 发送的格式：
     {"event": "pre_tool_use", "payload": {...工具名和参数...}}
     """
-    event_type = raw.get("event", "unknown")
-    payload = raw.get("payload", {})
-    return event_type, payload
+    # 使用公共基座解析
+    event = parse_inbound_hook_event_minimal(raw, event_key="event", payload_key="payload")
+
+    # 返回 tuple 格式（兼容现有调用）
+    return event.event_type, event.payload
 
 
-# ─── Receiver（治理端点） ───
+# ─── Receiver（治理端点）───
 
 
 class GovernanceCheckFn(Protocol):
     """治理检查函数接口。"""
-    def __call__(self, event_type: str, payload: dict[str, Any]) -> GateResult: ...  # noqa: E704
+
+    def __call__(self, event_type: str, payload: dict[str, Any]) -> GateResult:
+        """治理检查函数。"""
+        ...
 
 
 class OpenHarnessHookReceiver:
     """接收 OpenHarness hook 请求，执行治理检查，返回响应。
+
+    M16: 通过复用 InboundHookResult，自动符合 InboundHookReceiver Protocol
 
     用法：
         def my_check(event_type, payload) -> GateResult:
@@ -108,12 +121,12 @@ class OpenHarnessHookReceiver:
 
     def __init__(self, governance_check: GovernanceCheckFn) -> None:
         self._governance_check = governance_check
-        self._log: list[tuple[dict[str, Any], OpenHarnessHookResult]] = []
+        self._log: list[tuple[dict[str, Any], InboundHookResult]] = []
 
     def handle_hook_request(
         self,
         raw_payload: dict[str, Any],
-    ) -> tuple[dict[str, Any], OpenHarnessHookResult]:
+    ) -> tuple[dict[str, Any], InboundHookResult]:
         """处理 OpenHarness hook POST 请求。
 
         返回 (response_body, result)，调用方负责设置 HTTP status_code。
@@ -126,15 +139,17 @@ class OpenHarnessHookReceiver:
         return response_body, result
 
     @property
-    def log(self) -> list[tuple[dict[str, Any], OpenHarnessHookResult]]:
+    def log(self) -> list[tuple[dict[str, Any], InboundHookResult]]:
         return list(self._log)
 
 
-# ─── Probe（本地验证端） ───
+# ─── Probe（本地验证端）───
 
 
 class OpenHarnessHookProbe:
     """模拟 OpenHarness 发送 hook POST，用于本地验证。
+
+    M16: 通过复用 InboundHookResult，自动符合 InboundHookProbe Protocol
 
     用法：
         probe = OpenHarnessHookProbe(target_url="http://localhost:9988/governance")
@@ -148,13 +163,13 @@ class OpenHarnessHookProbe:
     ) -> None:
         self.target_url = target_url
         self.timeout_ms = timeout_ms
-        self._log: list[tuple[dict[str, Any], OpenHarnessHookResult]] = []
+        self._log: list[tuple[dict[str, Any], InboundHookResult]] = []
 
     def send_hook_event(
         self,
         event_type: str,
         payload: dict[str, Any],
-    ) -> OpenHarnessHookResult:
+    ) -> InboundHookResult:
         """发送模拟 hook 事件到目标端点。"""
         from urllib import request, error
 
@@ -180,7 +195,7 @@ class OpenHarnessHookProbe:
                 body = json.loads(response.read().decode("utf-8"))
                 blocked = body.get("blocked", False)
 
-                result = OpenHarnessHookResult(
+                result = InboundHookResult(
                     success=True,
                     blocked=blocked,
                     status_code=status_code,
@@ -194,7 +209,7 @@ class OpenHarnessHookProbe:
             except (json.JSONDecodeError, ValueError):
                 blocked = True
 
-            result = OpenHarnessHookResult(
+            result = InboundHookResult(
                 success=False,
                 blocked=blocked,
                 error=f"HTTP {exc.code}: {body_text}",
@@ -202,14 +217,14 @@ class OpenHarnessHookProbe:
                 event_type=event_type,
             )
         except error.URLError as exc:
-            result = OpenHarnessHookResult(
+            result = InboundHookResult(
                 success=False,
                 blocked=False,
                 error=str(exc.reason),
                 event_type=event_type,
             )
         except TimeoutError:
-            result = OpenHarnessHookResult(
+            result = InboundHookResult(
                 success=False,
                 blocked=False,
                 error="Request timed out",
@@ -220,5 +235,5 @@ class OpenHarnessHookProbe:
         return result
 
     @property
-    def log(self) -> list[tuple[dict[str, Any], OpenHarnessHookResult]]:
+    def log(self) -> list[tuple[dict[str, Any], InboundHookResult]]:
         return list(self._log)
