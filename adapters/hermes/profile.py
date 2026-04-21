@@ -7,8 +7,9 @@
 - 哪些能力已确认，哪些待验证
 
 M11 — Hermes Agent Recon & Skeleton Profile
-M14 — Hook Integration Pattern Refinement（预留）
+M14 — Hook Integration Pattern Refinement
 M15 — Inbound Hook Gatekeeping Base Package（预期复用）
+M17 — Hermes First Executable Path on Inbound Base（已落地）
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ from typing import Any
 from adapters.host_protocols import (
     HostCapabilities,
     HostMode,
+    HookInteractionPattern,
 )
 
 
@@ -26,7 +28,7 @@ from adapters.host_protocols import (
 _HERMES_MATURITY: dict[HostMode, str] = {
     HostMode.SHADOW: "概念验证（待实现）",
     HostMode.NOTIFICATION: "概念验证（待实现）",
-    HostMode.HOOKS_LIVE: "概念验证（待实现）",
+    HostMode.HOOKS_LIVE: "最小可执行（M17 已落地）",
 }
 
 # Hermes 模式入口模块映射
@@ -40,7 +42,14 @@ _HERMES_ENTRY_POINTS: dict[HostMode, str] = {
 _HERMES_VALIDATED: dict[HostMode, bool] = {
     HostMode.SHADOW: False,
     HostMode.NOTIFICATION: False,
-    HostMode.HOOKS_LIVE: False,
+    HostMode.HOOKS_LIVE: True,  # M17 已验证
+}
+
+# Hermes hook_pattern 映射
+_HERMES_HOOK_PATTERN: dict[HostMode, HookInteractionPattern | None] = {
+    HostMode.SHADOW: None,
+    HostMode.NOTIFICATION: None,
+    HostMode.HOOKS_LIVE: HookInteractionPattern.INBOUND_HOOK_GATEKEEPING,
 }
 
 
@@ -59,19 +68,21 @@ class HermesProfile:
     - hooks-live 需要通过 hook 脚本 + HTTP 端点方式接入
     - Channel 系统支持 9+ 消息平台，适合 notification
     - AIAgent 回调体系清晰，适合 shadow mock
-    - 当前只做 skeleton profile，正式 adapter 待后续实现
 
-    M14 说明（预留）：
-    - Hermes 的 hook_pattern 可配置，取决于 hook 脚本实现方式
-    - 若脚本 POST 到 SaucyClaw 端点 → INBOUND_HOOK_GATEKEEPING
-    - 若脚本作为 SaucyClaw 调用入口 → OUTBOUND_HOOK_PUSH
-    - 当前 skeleton 状态，不指定 hook_pattern（待实现时确定）
+    M14 说明：
+    - Hermes hooks-live 使用 INBOUND_HOOK_GATEKEEPING 模式
+    - Hook 脚本 POST 到 SaucyClaw /governance 端点
+    - 脚本返回非 0 值阻断 Hermes 操作
 
     M15 说明（预期复用）：
     - Hermes 预期可复用 inbound_hook_gatekeeping 公共基座
-    - Hook 脚本可 POST 到 SaucyClaw /governance 端点
-    - 使用 InboundHookReceiver 接收请求，InboundHookProbe 本地验证
-    - 当前 skeleton 状态，待实现时确定具体复用方式
+
+    M17 说明（已落地）：
+    - Hermes 已真正复用 inbound_hook_gatekeeping 公共基座
+    - HermesHookResult = InboundHookResult（直接复用）
+    - build_hermes_hook_response 桥接公共 helper
+    - HermesHookReceiver/HermesHookProbe 符合公共 Protocol
+    - 25 单元测试 + 5 真实验证全部通过
     """
 
     name: str = "hermes"
@@ -87,7 +98,7 @@ class HermesProfile:
             supports_shadow=True,
             supports_notification=True,
             supports_hooks_live=True,
-            # hook_pattern 待实现时确定，当前 skeleton 状态不指定
+            hook_pattern=HookInteractionPattern.INBOUND_HOOK_GATEKEEPING,
         )
 
     def get_entry_point(self, mode: HostMode) -> str | None:
@@ -99,6 +110,9 @@ class HermesProfile:
     def is_validated(self, mode: HostMode) -> bool:
         return _HERMES_VALIDATED.get(mode, False)
 
+    def get_hook_pattern(self, mode: HostMode) -> HookInteractionPattern | None:
+        return _HERMES_HOOK_PATTERN.get(mode)
+
     def to_dict(self) -> dict[str, Any]:
         """导出为字典（用于序列化/日志）。"""
         return {
@@ -108,6 +122,7 @@ class HermesProfile:
                     "entry_point": self.get_entry_point(mode),
                     "maturity": self.get_maturity(mode),
                     "validated": self.is_validated(mode),
+                    "hook_pattern": self.get_hook_pattern(mode).value if self.get_hook_pattern(mode) else None,
                 }
                 for mode in self.capabilities.modes
             },

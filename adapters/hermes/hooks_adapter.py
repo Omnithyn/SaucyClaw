@@ -1,0 +1,242 @@
+"""Hermes Hook 适配器 — 最小可执行版本。
+
+对接 Hermes Hook 脚本发现机制：
+- Hermes 从 ~/.hermes/hooks/ 目录发现脚本
+- agent:step 事件触发时执行脚本
+- 脚本通过 stdin 接收事件数据，POST 到 SaucyClaw 端点
+- 脚本返回非 0 值阻断 Hermes 操作
+
+本适配器提供两个方向的能力：
+1. HermesHookReceiver — 接收 Hermes hook POST 请求，执行治理，返回响应
+2. HermesHookProbe — 模拟 Hermes 发送 hook POST，用于本地验证
+
+M17 — Hermes First Executable Path on Inbound Base
+
+复用公共基座：
+- InboundHookResult — 直接复用（字段完全一致）
+- build_gatekeeping_response_from_gate_result — 桥接使用
+- parse_inbound_hook_event_minimal — 桥接使用
+"""
+
+from __future__ import annotations
+
+import json
+from typing import Any, Protocol
+
+from adapters.inbound_hook_protocols import (
+    InboundHookResult,
+    build_gatekeeping_response_from_gate_result,
+    parse_inbound_hook_event_minimal,
+)
+from stores.protocols import GateResult
+
+
+# ─── 结果结构（直接复用公共基座）───
+
+# HermesHookResult 与 InboundHookResult 字段完全一致
+# 直接复用公共基座，无需重复定义
+HermesHookResult = InboundHookResult
+
+
+# ─── Hermes Hook Payload 契约（桥接公共基座）───
+
+
+def build_hermes_hook_response(
+    gate_result: GateResult,
+    status_code: int = 200,
+) -> tuple[dict[str, Any], HermesHookResult]:
+    """从 GateResult 构建 Hermes hook 响应。
+
+    M17: 桥接公共基座 build_gatekeeping_response_from_gate_result
+
+    Hermes Hook 脚本的响应逻辑：
+    - 脚本解析响应 JSON
+    - 如果 blocked=true，脚本返回非 0 值阻断 Hermes
+    - 如果 blocked=false，脚本返回 0 值允许 Hermes 继续
+
+    治理阻断策略：
+    - Block 决策 → 返回 403 + blocked=true
+    - Allow 决策 → 返回 200 + blocked=false
+    """
+    # 使用公共基座构建 GatekeepingResponse
+    base_response = build_gatekeeping_response_from_gate_result(gate_result)
+
+    # 转换为 Hermes 特定的 dict 格式
+    # Hermes hook 脚本期望 {blocked, reason} 结构
+    response_body = {
+        "blocked": base_response.blocked,
+        "reason": base_response.reason,
+    }
+
+    if base_response.blocked:
+        response_body["matched_rules"] = base_response.matched_rules
+
+    # 使用公共基座的 InboundHookResult
+    result = HermesHookResult(
+        success=base_response.success,
+        blocked=base_response.blocked,
+        status_code=base_response.status_code,
+    )
+
+    return response_body, result
+
+
+def parse_hermes_hook_payload(raw: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    """解析 Hermes Hook 脚本发送的 payload。
+
+    M17: 桥接公共基座 parse_inbound_hook_event_minimal
+
+    Hermes 发送的格式：
+    {"event": "agent:step", "payload": {...工具名和参数...}}
+
+    注意：Hermes 事件类型是 agent:step（而非 OpenHarness 的 pre_tool_use）
+    """
+    # 使用公共基座解析
+    event = parse_inbound_hook_event_minimal(raw, event_key="event", payload_key="payload")
+
+    # 返回 tuple 格式（兼容现有调用）
+    return event.event_type, event.payload
+
+
+# ─── Receiver（治理端点）───
+
+
+class GovernanceCheckFn(Protocol):
+    """治理检查函数接口。"""
+
+    def __call__(self, event_type: str, payload: dict[str, Any]) -> GateResult:
+        """治理检查函数。"""
+        ...
+
+
+class HermesHookReceiver:
+    """接收 Hermes hook 请求，执行治理检查，返回响应。
+
+    M17: 通过复用 InboundHookResult，自动符合 InboundHookReceiver Protocol
+
+    用法：
+        def my_check(event_type, payload) -> GateResult:
+            ...
+
+        receiver = HermesHookReceiver(governance_check=my_check)
+        response_body, result = receiver.handle_hook_request(hook_payload)
+    """
+
+    def __init__(self, governance_check: GovernanceCheckFn) -> None:
+        self._governance_check = governance_check
+        self._log: list[tuple[dict[str, Any], InboundHookResult]] = []
+
+    def handle_hook_request(
+        self,
+        raw_payload: dict[str, Any],
+    ) -> tuple[dict[str, Any], InboundHookResult]:
+        """处理 Hermes hook POST 请求。
+
+        返回 (response_body, result)，调用方负责设置 HTTP status_code。
+        """
+        event_type, payload = parse_hermes_hook_payload(raw_payload)
+        gate_result = self._governance_check(event_type, payload)
+        response_body, result = build_hermes_hook_response(gate_result)
+
+        self._log.append((raw_payload, result))
+        return response_body, result
+
+    @property
+    def log(self) -> list[tuple[dict[str, Any], InboundHookResult]]:
+        return list(self._log)
+
+
+# ─── Probe（本地验证端）───
+
+
+class HermesHookProbe:
+    """模拟 Hermes 发送 hook POST，用于本地验证。
+
+    M17: 通过复用 InboundHookResult，自动符合 InboundHookProbe Protocol
+
+    用法：
+        probe = HermesHookProbe(target_url="http://localhost:18990/governance")
+        result = probe.send_hook_event("agent:step", {"tool_name": "Write"})
+    """
+
+    def __init__(
+        self,
+        target_url: str,
+        timeout_ms: int = 5000,
+    ) -> None:
+        self.target_url = target_url
+        self.timeout_ms = timeout_ms
+        self._log: list[tuple[dict[str, Any], InboundHookResult]] = []
+
+    def send_hook_event(
+        self,
+        event_type: str,
+        payload: dict[str, Any],
+    ) -> InboundHookResult:
+        """发送模拟 hook 事件到目标端点。"""
+        from urllib import request, error
+
+        hook_payload = {
+            "event": event_type,
+            "payload": payload,
+        }
+
+        timeout_sec = self.timeout_ms / 1000.0
+        data = json.dumps(hook_payload).encode("utf-8")
+        headers = {"Content-Type": "application/json"}
+
+        req = request.Request(
+            self.target_url,
+            data=data,
+            headers=headers,
+            method="POST",
+        )
+
+        try:
+            with request.urlopen(req, timeout=timeout_sec) as response:
+                status_code = response.getcode()
+                body = json.loads(response.read().decode("utf-8"))
+                blocked = body.get("blocked", False)
+
+                result = InboundHookResult(
+                    success=True,
+                    blocked=blocked,
+                    status_code=status_code,
+                    event_type=event_type,
+                )
+        except error.HTTPError as exc:
+            body_text = exc.read().decode("utf-8") if exc.fp else ""
+            try:
+                body = json.loads(body_text)
+                blocked = body.get("blocked", False)
+            except (json.JSONDecodeError, ValueError):
+                blocked = True
+
+            result = InboundHookResult(
+                success=False,
+                blocked=blocked,
+                error=f"HTTP {exc.code}: {body_text}",
+                status_code=exc.code,
+                event_type=event_type,
+            )
+        except error.URLError as exc:
+            result = InboundHookResult(
+                success=False,
+                blocked=False,
+                error=str(exc.reason),
+                event_type=event_type,
+            )
+        except TimeoutError:
+            result = InboundHookResult(
+                success=False,
+                blocked=False,
+                error="Request timed out",
+                event_type=event_type,
+            )
+
+        self._log.append((hook_payload, result))
+        return result
+
+    @property
+    def log(self) -> list[tuple[dict[str, Any], InboundHookResult]]:
+        return list(self._log)
