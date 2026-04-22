@@ -1,0 +1,27 @@
+# 本体 Schema：事实类型定义
+# N2 — Ontology Governance Loop
+
+fact_types:
+  - id: "review-requirement"
+    name: "审查要求"
+    description: "任务需要审查的事实"
+    subject_type: "agent-role"
+    object_type: "task-type"
+    establishment_condition: "ToolInvocation.tool_name == 'Write'"
+    evidence_binding: true
+
+  - id: "permission-grant"
+    name: "权限授予"
+    description: "权限授予事实"
+    subject_type: "agent-role"
+    object_type: "permission"
+    establishment_condition: "AgentRole.capabilities contains permission"
+    evidence_binding: true
+
+  - id: "role-assignment"
+    name: "角色分配"
+    description: "角色分配事实"
+    subject_type: "agent-role"
+    object_type: "agent-role"
+    establishment_condition: "TaskAssignment.assignee matches role"
+    evidence_binding: true

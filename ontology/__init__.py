@@ -1,6 +1,7 @@
 """本体核心模块。
 
 N1 — Ontology Core Foundation
+N2 — Ontology Governance Loop
 
 提供 SaucyClaw 的最小本体核心，让对象、关系、事件、上下文、事实、证据和规则
 有统一的语义挂点，为后续本体驱动治理做准备。
@@ -10,11 +11,16 @@ N1 — Ontology Core Foundation
 - instances.py：本体实例模型（EntityInstance、RelationInstance、EventInstance、ContextSnapshot、FactRecord）
 - facts.py：事实与证据绑定结构（FactEvidenceBinding、EvidenceChain、FactEstablishment）
 - policy_binding.py：规则绑定点（OntologyPolicyBinding、PolicyCondition、PolicyJudgment）
+- loader.py：本体 YAML 加载器（load_ontology_schema、validate_ontology_schema）
+- mapping.py：事件映射器（map_raw_event_to_ontology、EventMappingResult）
+- establishment.py：事实建立器（establish_fact_from_event、FactEstablishmentResult）
+- governance_loop.py：本体治理循环（run_ontology_governance_loop、OntologyGovernanceResult）
 
 三层架构：
 - Schema Layer：类型定义（静态）
 - Instance Layer：实例模型（动态）
 - Binding Layer：绑定关系（证据链、策略绑定）
+- Loop Layer：治理循环（映射 → 建立 → 评估）
 """
 
 from __future__ import annotations
@@ -67,6 +73,32 @@ from ontology.policy_binding import (
     evaluate_policy_on_ontology,
 )
 
+from ontology.loader import (
+    OntologyLoadError,
+    load_ontology_schema,
+    validate_ontology_schema,
+    load_default_ontology_schema,
+)
+
+from ontology.mapping import (
+    EventMappingError,
+    EventMappingResult,
+    map_raw_event_to_ontology,
+)
+
+from ontology.establishment import (
+    FactEstablishmentError,
+    FactEstablishmentResult,
+    establish_fact_from_event,
+)
+
+from ontology.governance_loop import (
+    OntologyGovernanceError,
+    OntologyGovernanceResult,
+    run_ontology_governance_loop,
+    run_minimal_ontology_governance,
+)
+
 
 __all__ = [
     # Schema
@@ -109,4 +141,22 @@ __all__ = [
     "evaluate_entity_condition",
     "evaluate_fact_condition",
     "evaluate_policy_on_ontology",
+    # Loader
+    "OntologyLoadError",
+    "load_ontology_schema",
+    "validate_ontology_schema",
+    "load_default_ontology_schema",
+    # Mapping
+    "EventMappingError",
+    "EventMappingResult",
+    "map_raw_event_to_ontology",
+    # Establishment
+    "FactEstablishmentError",
+    "FactEstablishmentResult",
+    "establish_fact_from_event",
+    # Governance Loop
+    "OntologyGovernanceError",
+    "OntologyGovernanceResult",
+    "run_ontology_governance_loop",
+    "run_minimal_ontology_governance",
 ]
