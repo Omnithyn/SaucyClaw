@@ -1,0 +1,35 @@
+# 本体 Schema：事件类型定义
+# N1 — Ontology Core Foundation
+
+event_types:
+  - id: "tool-invocation"
+    name: "工具调用事件"
+    description: "Agent 调用工具的事件"
+    subject_type: "agent-role"
+    object_type: "task-type"
+    properties:
+      - "tool_name"
+      - "tool_args"
+      - "context_id"
+    timestamp_field: "timestamp"
+
+  - id: "task-assignment"
+    name: "任务分配事件"
+    description: "任务被分配给 Agent 的事件"
+    subject_type: "agent-role"
+    object_type: "task-type"
+    properties:
+      - "task_id"
+      - "task_type"
+      - "priority"
+    timestamp_field: "timestamp"
+
+  - id: "review-request"
+    name: "审查请求事件"
+    description: "请求审查的事件"
+    subject_type: "agent-role"
+    object_type: "task-type"
+    properties:
+      - "review_type"
+      - "reviewer_role"
+    timestamp_field: "timestamp"

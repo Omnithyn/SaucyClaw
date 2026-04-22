@@ -1,0 +1,33 @@
+# 本体 Schema：上下文类型定义
+# N1 — Ontology Core Foundation
+
+context_types:
+  - id: "session-context"
+    name: "会话上下文"
+    description: "Agent 会话的执行环境上下文"
+    properties:
+      - "session_id"
+      - "workspace_path"
+      - "runtime_name"
+      - "timestamp"
+    lifecycle: "ephemeral"
+
+  - id: "workspace-context"
+    name: "工作空间上下文"
+    description: "工作空间的持久状态上下文"
+    properties:
+      - "workspace_id"
+      - "repo_url"
+      - "branch"
+      - "active_tasks"
+    lifecycle: "persistent"
+
+  - id: "execution-context"
+    name: "执行上下文"
+    description: "当前执行操作的环境上下文"
+    properties:
+      - "operation_id"
+      - "tool_name"
+      - "input_data"
+      - "output_data"
+    lifecycle: "ephemeral"
