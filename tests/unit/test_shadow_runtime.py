@@ -33,7 +33,11 @@ class TestShadowRuntimeWithoutBridge:
         """无 bridge 时 enhanced_output 为 None。"""
         engine = _make_engine(tmp_path)
         adapter = OpenClawHostAdapter()
-        runtime = ShadowRuntime(engine=engine, adapter=adapter, explain_bridge=None)
+        runtime = ShadowRuntime(
+            engine=engine,
+            adapter=adapter,
+            explain_bridge=None,
+        )
 
         fixture_path = FIXTURES_DIR / "block_input.yaml"
         import yaml
@@ -58,7 +62,11 @@ class TestShadowRuntimeWithBridgeDisabled:
         lookup = {r.id: r for r in schema.rules}
         bridge = ExplainBridge(lookup, enable=False)
 
-        runtime = ShadowRuntime(engine=engine, adapter=adapter, explain_bridge=bridge)
+        runtime = ShadowRuntime(
+            engine=engine,
+            adapter=adapter,
+            explain_bridge=bridge,
+        )
 
         fixture_path = FIXTURES_DIR / "block_input.yaml"
         import yaml
@@ -83,7 +91,11 @@ class TestShadowRuntimeWithBridgeEnabled:
         lookup = {r.id: r for r in schema.rules}
         bridge = ExplainBridge(lookup, enable=True)
 
-        runtime = ShadowRuntime(engine=engine, adapter=adapter, explain_bridge=bridge)
+        runtime = ShadowRuntime(
+            engine=engine,
+            adapter=adapter,
+            explain_bridge=bridge,
+        )
 
         fixture_path = FIXTURES_DIR / "block_input.yaml"
         import yaml
@@ -108,7 +120,11 @@ class TestShadowRuntimeWithBridgeEnabled:
         lookup = {r.id: r for r in schema.rules}
         bridge = ExplainBridge(lookup, enable=True)
 
-        runtime = ShadowRuntime(engine=engine, adapter=adapter, explain_bridge=bridge)
+        runtime = ShadowRuntime(
+            engine=engine,
+            adapter=adapter,
+            explain_bridge=bridge,
+        )
 
         fixture_path = FIXTURES_DIR / "block_input.yaml"
         import yaml
@@ -135,7 +151,11 @@ class TestShadowRuntimeAllowScenario:
         lookup = {r.id: r for r in schema.rules}
         bridge = ExplainBridge(lookup, enable=True)
 
-        runtime = ShadowRuntime(engine=engine, adapter=adapter, explain_bridge=bridge)
+        runtime = ShadowRuntime(
+            engine=engine,
+            adapter=adapter,
+            explain_bridge=bridge,
+        )
 
         fixture_path = FIXTURES_DIR / "allow_input.yaml"
         import yaml

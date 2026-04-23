@@ -23,7 +23,10 @@ from stores.protocols import GateResult
 
 if TYPE_CHECKING:
     from adapters.openclaw.adapter import OpenClawHostAdapter
-    from adapters.openclaw.explain_bridge import ExplainBridge, AdapterExplainOutput
+    from adapters.openclaw.explain_bridge import (
+        AdapterExplainOutput,
+        ExplainBridge,
+    )
     from core.engine.orchestrator import GovernanceEngine
 
 
