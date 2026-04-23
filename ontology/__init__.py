@@ -3,6 +3,8 @@
 N1 — Ontology Core Foundation
 N2 — Ontology Governance Loop
 N1.5 — Ontology Platform Architecture & Visual Authoring Foundation
+N1.6 — Ontology Studio Contract Closure
+N1.7 — Ontology Studio Semantic Surface Expansion
 
 提供 SaucyClaw 的最小本体核心，让对象、关系、事件、上下文、事实、证据和规则
 有统一的语义挂点，为后续本体驱动治理做准备。
@@ -23,6 +25,9 @@ N1.5 — Ontology Platform Architecture & Visual Authoring Foundation
 - catalog.py：类型注册与索引（N1.5）
 - validation.py：一致性校验（N1.5）
 - roundtrip.py：三向等价转换（N1.5）
+- semantic_surface.py：三层语义 Surface（N1.7）
+- edge_semantics.py：Edge 编译规则（N1.7）
+- authoring_package.py：设计时包与运行时包（N1.7）
 
 三层架构：
 - Schema Layer：类型定义（静态）
@@ -30,6 +35,7 @@ N1.5 — Ontology Platform Architecture & Visual Authoring Foundation
 - Binding Layer：绑定关系（证据链、策略绑定）
 - Loop Layer：治理循环（映射 → 建立 → 评估）
 - Platform Layer：可视化构建、Catalog、校验、Round-Trip（N1.5）
+- Semantic Layer：三层 Surface、Edge Semantics、Package（N1.7）
 """
 
 from __future__ import annotations
@@ -165,6 +171,42 @@ from ontology.studio_loader import (
     is_reserved_edge_type,
 )
 
+# N1.7 — Semantic Surface
+from ontology.semantic_surface import (
+    EdgeCompilationTarget,
+    SemanticSurface,
+    get_semantic_surface,
+    is_preview_node_type,
+    is_preview_edge_type,
+    get_node_surface_level,
+    get_edge_surface_level,
+    is_visual_only_edge,
+    get_edge_compilation_target,
+    get_guaranteed_fields_for_node_type,
+    get_unsupported_fields_for_node_type,
+)
+
+# N1.7 — Edge Semantics
+from ontology.edge_semantics import (
+    EdgeCompilationError,
+    EdgeCompilationResult,
+    compile_edge_to_relation_type,
+    compile_edge_to_policy_binding,
+    compile_edges_from_visual_graph,
+    get_edge_semantics_description,
+    get_all_edge_semantics,
+)
+
+# N1.7 — Authoring Package
+from ontology.authoring_package import (
+    CompilationReport,
+    AuthoringPackage,
+    RuntimePackage,
+    compile_authoring_to_runtime,
+    save_authoring_package,
+    load_authoring_package,
+)
+
 
 __all__ = [
     # Schema
@@ -270,4 +312,31 @@ __all__ = [
     "is_reserved_node_type",
     "is_supported_edge_type",
     "is_reserved_edge_type",
+    # N1.7 — Semantic Surface
+    "EdgeCompilationTarget",
+    "SemanticSurface",
+    "get_semantic_surface",
+    "is_preview_node_type",
+    "is_preview_edge_type",
+    "get_node_surface_level",
+    "get_edge_surface_level",
+    "is_visual_only_edge",
+    "get_edge_compilation_target",
+    "get_guaranteed_fields_for_node_type",
+    "get_unsupported_fields_for_node_type",
+    # N1.7 — Edge Semantics
+    "EdgeCompilationError",
+    "EdgeCompilationResult",
+    "compile_edge_to_relation_type",
+    "compile_edge_to_policy_binding",
+    "compile_edges_from_visual_graph",
+    "get_edge_semantics_description",
+    "get_all_edge_semantics",
+    # N1.7 — Authoring Package
+    "CompilationReport",
+    "AuthoringPackage",
+    "RuntimePackage",
+    "compile_authoring_to_runtime",
+    "save_authoring_package",
+    "load_authoring_package",
 ]

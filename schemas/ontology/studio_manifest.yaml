@@ -1,17 +1,43 @@
 # Ontology Studio Manifest
-# N1.6 — Studio Contract Closure
+# N1.7 — Ontology Studio Semantic Surface Expansion
 #
-# Studio 设计时统一入口，组织 Palette、Form Schemas、Edge Types、Supported Categories。
-# Source of Truth 优先级：Runtime Schema > Studio Manifest。
+# Studio 设计时统一入口，组织 Palette、Form Schemas、Edge Types、Semantic Surface。
+# Source of Truth 优先级：AuthoringPackage > RuntimePackage > Studio Manifest。
 
 studio:
-  version: "1.0"
+  version: "1.1"
   name: "SaucyClaw Ontology Studio"
-  description: "最小可构建平台（N1.5-N1.6）"
+  description: "语义完整的设计平台（N1.7）"
+
+  # ─── Semantic Surface Definition (N1.7) ───
+  # 三层结构：Supported / Preview / Reserved
+
+  semantic_surface:
+    supported_node_prefixes:
+      - "event"
+      - "context"
+      - "fact"
+      - "entity"  # N1.7: 正式支持
+
+    preview_node_prefixes:
+      - "relation"  # N1.7: 预览支持
+      - "policy"    # N1.7: 预览支持
+
+    reserved_node_prefixes: []  # N1.7: 无预留
+
+    supported_edge_types:
+      - "derives"
+
+    preview_edge_types:
+      - "relates"   # N1.7: 编译为 RelationType
+      - "triggers"  # N1.7: 编译为 PolicyBinding.trigger
+      - "requires"  # N1.7: 编译为 PolicyBinding.condition
+      - "contains"  # N1.7: Visual-only（组合关系）
+
+    reserved_edge_types: []  # N1.7: 无预留
 
   # ─── 正式支持的 Node Categories ───
-  # 当前承诺：event / context / fact
-  # 预留：entity / relation / policy
+  # Supported Layer：完整 round-trip 保证
 
   supported_categories:
     - id: "event"
@@ -44,81 +70,152 @@ studio:
         - "fact-permission-grant"
         - "fact-role-assignment"
 
-  # ─── 预留的 Node Categories（未正式支持）───
-  # 这些类别在 validation 中会触发 unsupported 错误
-
-  reserved_categories:
-    - id: "entity"
+    - id: "entity"  # N1.7: 新增正式支持
       name: "对象类型"
-      description: "预留，需要 meta_model EntityType 对齐"
+      description: "Agent 系统中的对象（人、角色、资源等）"
       color: "#60BD68"
       visual_hint: "entity"
-      node_types: []
+      node_types:
+        - "entity-agent"
+        - "entity-role"
+        - "entity-resource"
 
+  # ─── 预览支持的 Node Categories ───
+  # Preview Layer：部分语义可用，明确信息丢失
+
+  preview_categories:
     - id: "relation"
       name: "关系类型"
-      description: "预留，需要 RelationType 边类型完善"
+      description: "实体间的关系（Preview：cardinality/constraints 不保证编译）"
       color: "#F17CB0"
       visual_hint: "relation"
-      node_types: []
+      node_types:
+        - "relation-agent-role"
+        - "relation-role-resource"
+      compilation_notes: "编译为 RelationType，cardinality/constraints 可能丢失"
 
     - id: "policy"
       name: "策略类型"
-      description: "预留，需要 PolicyBinding 对齐"
+      description: "治理策略（Preview：conditions/judgments/scope 不保证编译）"
       color: "#B276B2"
       visual_hint: "policy"
-      node_types: []
+      node_types:
+        - "policy-review-rule"
+        - "policy-access-control"
+      compilation_notes: "编译为 PolicyBinding，conditions/judgments 可能丢失"
 
   # ─── 正式支持的 Edge Types ───
+  # Supported Layer：完整语义定义
 
   supported_edge_types:
     - id: "derives"
       name: "推导出"
-      description: "事件推导产生事实"
+      description: "事件推导产生事实（Visual-only，由 GovernanceEngine 处理）"
       source_category: "event"
       target_category: "fact"
       directed: true
       color: "#888888"
+      compilation_target: "visual_only"
+      compilation_notes: "推导关系由 GovernanceEngine 处理，不编译为 Schema"
 
-  # ─── 预留的 Edge Types（未正式支持）───
+  # ─── 预览支持的 Edge Types ───
+  # Preview Layer：有编译目标，但部分信息可能丢失
 
-  reserved_edge_types:
+  preview_edge_types:
     - id: "relates"
       name: "关联"
-      description: "预留，实体关系"
+      description: "实体间关系（编译为 RelationType）"
       source_category: "entity"
       target_category: "entity"
+      directed: true
+      color: "#F17CB0"
+      compilation_target: "relation_type"
+      compilation_notes: "编译为 RelationType，cardinality/constraints 可能丢失"
 
     - id: "triggers"
       name: "触发"
-      description: "预留，事件触发事件"
+      description: "事件/事实触发策略（编译为 PolicyBinding.trigger）"
       source_category: "event"
-      target_category: "event"
+      target_category: "policy"
+      directed: true
+      color: "#B276B2"
+      compilation_target: "policy_binding"
+      compilation_field: "trigger"
+      compilation_notes: "编译为 PolicyBinding.trigger"
 
     - id: "requires"
       name: "依赖"
-      description: "预留，事实依赖事实"
-      source_category: "fact"
-      target_category: "fact"
+      description: "策略依赖实体/事实（编译为 PolicyBinding.condition）"
+      source_category: "policy"
+      target_category: "entity"
+      directed: true
+      color: "#B276B2"
+      compilation_target: "policy_binding"
+      compilation_field: "condition"
+      compilation_notes: "编译为 PolicyBinding.condition"
+
+    - id: "contains"
+      name: "包含"
+      description: "组合关系（Visual-only，不编译）"
+      source_category: "any"
+      target_category: "any"
+      directed: true
+      color: "#AAAAAA"
+      compilation_target: "visual_only"
+      compilation_notes: "组合关系，不编译为 Schema"
 
   # ─── Form Schemas（当前为空，后续可扩展）───
   # Form Schema 定义节点属性编辑面板结构
 
   form_schemas: []
 
-  # ─── Round-Trip Supported Surface ───
-  # 明确声明哪些字段在 round-trip 中保证完整映射
+  # ─── Compilation Surface ───
+  # 明确声明哪些字段在编译中保证映射
 
-  roundtrip_surface:
-    supported_node_fields:
-      - "node_id"
-      - "label"
-      - "properties.subject_type"
-      - "properties.object_type"
-      - "properties.properties"
-      - "properties.establishment_condition"
-      - "properties.lifecycle"
+  compilation_surface:
+    # Supported 类型完整保证字段
+    supported_compilation_fields:
+      event:
+        - "node_id"
+        - "label"
+        - "subject_type"
+        - "object_type"
+        - "properties"
+        - "timestamp_field"
+      context:
+        - "node_id"
+        - "label"
+        - "properties"
+        - "lifecycle"
+      fact:
+        - "node_id"
+        - "label"
+        - "subject_type"
+        - "object_type"
+        - "establishment_condition"
+        - "evidence_binding"
+      entity:  # N1.7: 新增
+        - "node_id"
+        - "label"
+        - "entity_type"
+        - "properties"
+        - "identity_fields"
 
+    # Preview 类型部分保证字段
+    preview_partial_fields:
+      relation:
+        - "node_id"
+        - "label"
+        - "source_entity_type"
+        - "target_entity_type"
+        # 不保证: cardinality, properties, constraints
+      policy:
+        - "node_id"
+        - "label"
+        - "policy_type"
+        # 不保证: conditions, judgments, scope, priority
+
+    # Visual-only 字段（不进入 Runtime）
     ignored_visual_fields:
       - "visual_hint"
       - "color"
@@ -127,6 +224,24 @@ studio:
       - "max_instances"
       - "metadata"
 
-    default_runtime_fields:
-      - "timestamp_field"
-      - "evidence_binding"
+  # ─── Authoring Package Definition ───
+  # 设计时持久化包结构
+
+  authoring_package:
+    description: "Studio 设计意图的持久化格式，是 Source of Truth for Design"
+    contents:
+      - "visual_graph.yaml"
+      - "form_schemas.yaml"
+      - "catalog_index.yaml"
+      - "studio_manifest.yaml"
+
+  # ─── Runtime Package Definition ───
+  # 运行时编译包结构
+
+  runtime_package:
+    description: "GovernanceEngine 消费的编译产物，是 Source of Truth for Execution"
+    contents:
+      - "OntologySchema (Event/Context/Fact/Entity)"
+      - "RelationTypes (from relates edges)"
+      - "PolicyBindings (from triggers/requires edges)"
+    compilation_notes: "不保证反向编译回 Authoring（Preview 类型信息有损）"

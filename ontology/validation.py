@@ -2,17 +2,18 @@
 
 N1.5 — Ontology Platform Architecture & Visual Authoring Foundation
 N1.6 — Ontology Studio Contract Closure
+N1.7 — Ontology Studio Semantic Surface Expansion
 
 提供比 loader 中 validate_ontology_schema 更深层的一致性校验：
 - 跨类型引用检查（subject_type / object_type 是否存在）
 - 可视化图校验（悬空边、重复节点、类型匹配）
 - 属性完整性校验
 - 必填字段检查
-- 未正式支持元素检测（N1.6：发出 error 而非 warning）
+- 语义 Surface 检测（N1.7：supported/preview/reserved 三层）
 
 与 loader 的区别：
 - loader.validate_ontology_schema：基础校验（ID 重复）
-- 本模块：深度校验（引用、图结构、属性、supported surface）
+- 本模块：深度校验（引用、图结构、属性、semantic surface）
 """
 
 from __future__ import annotations
@@ -21,13 +22,15 @@ from dataclasses import dataclass, field
 
 from ontology.catalog import OntologyCatalog
 from ontology.schema import OntologySchema
-from ontology.studio_loader import (
-    get_supported_surface,
+from ontology.semantic_surface import (
+    get_semantic_surface,
+    is_preview_edge_type,
+    is_preview_node_type,
     is_reserved_edge_type,
     is_reserved_node_type,
     is_supported_edge_type,
     is_supported_node_type,
-    SupportedSurface,
+    SemanticSurface,
 )
 from ontology.visual_model import VisualGraph
 
@@ -94,7 +97,7 @@ def validate_schema_references(schema: OntologySchema) -> ValidationResult:
 
 def validate_visual_graph(
     graph: VisualGraph,
-    surface: SupportedSurface | None = None,
+    surface: SemanticSurface | None = None,
 ) -> ValidationResult:
     """校验可视化图结构。
 
@@ -102,40 +105,49 @@ def validate_visual_graph(
     1. 节点 ID 唯一性
     2. 边引用的源/目标节点是否存在（悬空边检查）
     3. 边的源 != 目标（自环检查，仅 warn）
-    4. 未正式支持的 node/edge 类型（N1.6：error 而非 warning）
+    4. 语义 Surface 检测（N1.7：supported/preview/reserved 三层）
+       - supported：通过
+       - preview：发出 warning
+       - reserved：发出 error
+       - unknown：发出 error
 
     Args:
         graph: 可视化图
-        surface: 正式支持的能力声明（默认 get_supported_surface()）
+        surface: 语义 Surface（默认 get_semantic_surface()）
 
     Returns:
         ValidationResult
     """
-    s = surface or get_supported_surface()
+    s = surface or get_semantic_surface()
     errors: list[str] = []
     warnings: list[str] = []
 
     node_ids: set[str] = set()
 
-    # 检查节点 ID 唯一性
+    # 检查节点 ID 唯一性和 Surface 状态
     for node in graph.nodes:
         if node.node_id in node_ids:
             errors.append(f"节点 ID {node.node_id!r} 重复")
         node_ids.add(node.node_id)
 
-        # N1.6: 检测未正式支持的节点类型
+        # N1.7: 三层 Surface 检测
         if is_reserved_node_type(node.type_id, s):
             errors.append(
                 f"节点 {node.node_id!r} 使用预留类型 {node.type_id!r}"
-                "（未正式支持，请参见 Studio Contract）"
+                "（不支持，请参见 Studio Contract）"
+            )
+        elif is_preview_node_type(node.type_id, s):
+            warnings.append(
+                f"节点 {node.node_id!r} 使用 Preview 类型 {node.type_id!r}"
+                "（部分语义可用，部分信息可能丢失）"
             )
         elif not is_supported_node_type(node.type_id, s):
             errors.append(
                 f"节点 {node.node_id!r} 使用未知类型 {node.type_id!r}"
-                "（不在 supported surface 中）"
+                "（不在 semantic surface 中）"
             )
 
-    # 检查边引用
+    # 检查边引用和 Surface 状态
     for edge in graph.edges:
         if edge.source_id not in node_ids:
             errors.append(
@@ -152,17 +164,21 @@ def validate_visual_graph(
                 f"边 {edge.edge_id!r} 是自环（{edge.source_id!r}）"
             )
 
-        # N1.6: 检测未正式支持的边类型
+        # N1.7: 三层 Surface 检测
         if is_reserved_edge_type(edge.type_id, s):
             errors.append(
                 f"边 {edge.edge_id!r} 使用预留类型 {edge.type_id!r}"
-                "（未正式支持，请参见 Studio Contract）"
+                "（不支持，请参见 Studio Contract）"
+            )
+        elif is_preview_edge_type(edge.type_id, s):
+            warnings.append(
+                f"边 {edge.edge_id!r} 使用 Preview 类型 {edge.type_id!r}"
+                "（有编译目标，部分信息可能丢失）"
             )
         elif not is_supported_edge_type(edge.type_id, s):
-            # 未知的边类型（既不是 supported 也不是 reserved）发出 warning
-            warnings.append(
+            errors.append(
                 f"边 {edge.edge_id!r} 使用未知类型 {edge.type_id!r}"
-                "（不在 supported surface 中）"
+                "（不在 semantic surface 中）"
             )
 
     return ValidationResult(

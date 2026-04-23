@@ -143,7 +143,7 @@ class TestValidateVisualGraph:
             edges=[
                 VisualEdge(
                     edge_id="e1",
-                    type_id="self",
+                    type_id="derives",  # N1.7: 使用已知边类型
                     source_id="n1",
                     target_id="n1",
                 )
