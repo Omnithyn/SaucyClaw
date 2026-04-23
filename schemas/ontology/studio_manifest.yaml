@@ -1,0 +1,132 @@
+# Ontology Studio Manifest
+# N1.6 — Studio Contract Closure
+#
+# Studio 设计时统一入口，组织 Palette、Form Schemas、Edge Types、Supported Categories。
+# Source of Truth 优先级：Runtime Schema > Studio Manifest。
+
+studio:
+  version: "1.0"
+  name: "SaucyClaw Ontology Studio"
+  description: "最小可构建平台（N1.5-N1.6）"
+
+  # ─── 正式支持的 Node Categories ───
+  # 当前承诺：event / context / fact
+  # 预留：entity / relation / policy
+
+  supported_categories:
+    - id: "event"
+      name: "事件类型"
+      description: "Agent 系统中发生的事件"
+      color: "#4A90D9"
+      visual_hint: "event"
+      node_types:
+        - "event-tool-invocation"
+        - "event-task-assignment"
+        - "event-review-request"
+
+    - id: "context"
+      name: "上下文类型"
+      description: "事件发生时的环境状态"
+      color: "#5DA5DA"
+      visual_hint: "context"
+      node_types:
+        - "context-session"
+        - "context-workspace"
+        - "context-execution"
+
+    - id: "fact"
+      name: "事实类型"
+      description: "已建立或已推导的事实"
+      color: "#FAA43A"
+      visual_hint: "fact"
+      node_types:
+        - "fact-review-requirement"
+        - "fact-permission-grant"
+        - "fact-role-assignment"
+
+  # ─── 预留的 Node Categories（未正式支持）───
+  # 这些类别在 validation 中会触发 unsupported 错误
+
+  reserved_categories:
+    - id: "entity"
+      name: "对象类型"
+      description: "预留，需要 meta_model EntityType 对齐"
+      color: "#60BD68"
+      visual_hint: "entity"
+      node_types: []
+
+    - id: "relation"
+      name: "关系类型"
+      description: "预留，需要 RelationType 边类型完善"
+      color: "#F17CB0"
+      visual_hint: "relation"
+      node_types: []
+
+    - id: "policy"
+      name: "策略类型"
+      description: "预留，需要 PolicyBinding 对齐"
+      color: "#B276B2"
+      visual_hint: "policy"
+      node_types: []
+
+  # ─── 正式支持的 Edge Types ───
+
+  supported_edge_types:
+    - id: "derives"
+      name: "推导出"
+      description: "事件推导产生事实"
+      source_category: "event"
+      target_category: "fact"
+      directed: true
+      color: "#888888"
+
+  # ─── 预留的 Edge Types（未正式支持）───
+
+  reserved_edge_types:
+    - id: "relates"
+      name: "关联"
+      description: "预留，实体关系"
+      source_category: "entity"
+      target_category: "entity"
+
+    - id: "triggers"
+      name: "触发"
+      description: "预留，事件触发事件"
+      source_category: "event"
+      target_category: "event"
+
+    - id: "requires"
+      name: "依赖"
+      description: "预留，事实依赖事实"
+      source_category: "fact"
+      target_category: "fact"
+
+  # ─── Form Schemas（当前为空，后续可扩展）───
+  # Form Schema 定义节点属性编辑面板结构
+
+  form_schemas: []
+
+  # ─── Round-Trip Supported Surface ───
+  # 明确声明哪些字段在 round-trip 中保证完整映射
+
+  roundtrip_surface:
+    supported_node_fields:
+      - "node_id"
+      - "label"
+      - "properties.subject_type"
+      - "properties.object_type"
+      - "properties.properties"
+      - "properties.establishment_condition"
+      - "properties.lifecycle"
+
+    ignored_visual_fields:
+      - "visual_hint"
+      - "color"
+      - "position"
+      - "min_instances"
+      - "max_instances"
+      - "metadata"
+
+    default_runtime_fields:
+      - "timestamp_field"
+      - "evidence_binding"

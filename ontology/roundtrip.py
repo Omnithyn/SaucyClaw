@@ -1,6 +1,7 @@
 """Ontology Round-Trip — 三向等价转换。
 
 N1.5 — Ontology Platform Architecture & Visual Authoring Foundation
+N1.6 — Ontology Studio Contract Closure
 
 表达三种视角的等价转换：
 1. YAML/config → VisualGraph（配置加载为可视化图）
@@ -12,7 +13,9 @@ N1.5 — Ontology Platform Architecture & Visual Authoring Foundation
 - 所有转换是确定性的
 - 不修改输入，返回新对象（不可变性）
 
-这证明 ontology 后续可支撑可视化构建，而不只是代码手工构造。
+N1.6 新增：
+- RoundTripUnsupportedError：对未正式支持的元素抛出异常
+- verify_roundtrip_with_surface()：报告 supported vs unsupported 元素
 """
 
 from __future__ import annotations
@@ -26,6 +29,14 @@ from ontology.schema import (
     EventType,
     FactType,
     OntologySchema,
+)
+from ontology.studio_loader import (
+    get_supported_surface,
+    is_reserved_edge_type,
+    is_reserved_node_type,
+    is_supported_edge_type,
+    is_supported_node_type,
+    SupportedSurface,
 )
 from ontology.visual_model import (
     VisualGraph,
@@ -46,6 +57,8 @@ class RoundTripReport:
         type_count_after: 转换后类型数量
         is_equivalent: 是否等价
         differences: 差异列表
+        unsupported_elements: 未正式支持的元素列表（N1.6）
+        surface: 正式支持的能力声明（N1.6）
     """
 
     source_type: str
@@ -54,6 +67,22 @@ class RoundTripReport:
     type_count_after: int
     is_equivalent: bool
     differences: list[str] = field(default_factory=list)
+    unsupported_elements: list[str] = field(default_factory=list)
+    surface: SupportedSurface | None = None
+
+
+class RoundTripUnsupportedError(Exception):
+    """Round-Trip 遇到未正式支持的元素。
+
+    当 VisualGraph 包含 reserved node/edge 类型时抛出。
+    """
+
+    def __init__(self, element_type: str, element_id: str) -> None:
+        self.element_type = element_type
+        self.element_id = element_id
+        super().__init__(
+            f"Round-Trip 不支持 {element_type} {element_id!r}"
+        )
 
 
 # ─── VisualGraph → OntologySchema ───
@@ -63,6 +92,8 @@ class RoundTripReport:
 def visual_graph_to_schema(
     graph: VisualGraph,
     catalog: OntologyCatalog | None = None,
+    strict: bool = True,
+    surface: SupportedSurface | None = None,
 ) -> OntologySchema:
     """将 VisualGraph 编译为 OntologySchema。
 
@@ -73,18 +104,41 @@ def visual_graph_to_schema(
     - 节点 properties 映射到对应类型的 properties 字段
     - 边被忽略（运行时 Schema 不存储图结构）
 
+    N1.6 新增：
+    - strict=True 时，对 reserved node/edge 类型抛出 RoundTripUnsupportedError
+    - strict=False 时，跳过 reserved 元素但不报错
+
     Args:
         graph: 可视化图
         catalog: 可选 Catalog，用于解析节点类型信息
+        strict: 是否严格模式（遇到 reserved 元素抛出异常）
+        surface: 正式支持的能力声明（默认 get_supported_surface()）
 
     Returns:
         编译后的 OntologySchema
+
+    Raises:
+        RoundTripUnsupportedError: 当 strict=True 且遇到 reserved 元素
     """
+    s = surface or get_supported_surface()
     event_types: list[EventType] = []
     context_types: list[ContextType] = []
     fact_types: list[FactType] = []
 
     for node in graph.nodes:
+        # N1.6: 检测 reserved node 类型
+        if is_reserved_node_type(node.type_id, s):
+            if strict:
+                raise RoundTripUnsupportedError("node", node.type_id)
+            # strict=False: 跳过 reserved node
+            continue
+
+        # N1.6: 检测 unsupported node 类型（既不是 supported 也不是 reserved）
+        if not is_supported_node_type(node.type_id, s):
+            if strict:
+                raise RoundTripUnsupportedError("node", node.type_id)
+            continue
+
         props = node.properties or {}
         type_info = _resolve_type_info(node.type_id, catalog)
 
@@ -126,6 +180,12 @@ def visual_graph_to_schema(
                     evidence_binding=props.get("evidence_binding", True),
                 )
             )
+
+    # N1.6: 检测 reserved edge 类型（边不影响 Schema，但需要报错）
+    for edge in graph.edges:
+        if is_reserved_edge_type(edge.type_id, s):
+            if strict:
+                raise RoundTripUnsupportedError("edge", edge.type_id)
 
     return OntologySchema(
         event_types=event_types,
@@ -256,7 +316,10 @@ def verify_schema_roundtrip(schema: OntologySchema) -> RoundTripReport:
     """验证 Schema → VisualGraph → Schema 的往返等价性。
 
     证明可视化编辑不会导致信息丢失。
+
+    N1.6: 使用默认 SupportedSurface。
     """
+    surface = get_supported_surface()
     before_count = (
         len(schema.event_types)
         + len(schema.context_types)
@@ -266,8 +329,12 @@ def verify_schema_roundtrip(schema: OntologySchema) -> RoundTripReport:
     # Schema → VisualGraph
     graph = schema_to_visual_graph(schema)
 
-    # VisualGraph → Schema
-    rebuilt = visual_graph_to_schema(graph)
+    # VisualGraph → Schema（strict=False 以收集 unsupported）
+    try:
+        rebuilt = visual_graph_to_schema(graph, strict=False, surface=surface)
+    except RoundTripUnsupportedError:
+        # 不会发生（strict=False）
+        rebuilt = OntologySchema()
 
     after_count = (
         len(rebuilt.event_types)
@@ -276,6 +343,7 @@ def verify_schema_roundtrip(schema: OntologySchema) -> RoundTripReport:
     )
 
     differences: list[str] = []
+    unsupported_elements: list[str] = []
 
     # 检查 EventType
     before_events = {et.id: et for et in schema.event_types}
@@ -305,6 +373,63 @@ def verify_schema_roundtrip(schema: OntologySchema) -> RoundTripReport:
         type_count_after=after_count,
         is_equivalent=len(differences) == 0,
         differences=differences,
+        unsupported_elements=unsupported_elements,
+        surface=surface,
+    )
+
+
+def verify_roundtrip_with_surface(
+    graph: VisualGraph,
+    surface: SupportedSurface | None = None,
+) -> RoundTripReport:
+    """验证 VisualGraph 的 round-trip 并报告 supported vs unsupported 元素。
+
+    N1.6 新增函数，用于 Studio 合同验证。
+
+    Args:
+        graph: 待验证的 VisualGraph
+        surface: 正式支持的能力声明（默认 get_supported_surface()）
+
+    Returns:
+        RoundTripReport，包含 unsupported_elements 列表
+    """
+    s = surface or get_supported_surface()
+    unsupported: list[str] = []
+
+    # 检查 nodes
+    for node in graph.nodes:
+        if is_reserved_node_type(node.type_id, s):
+            unsupported.append(
+                f"reserved node type: {node.type_id!r}"
+            )
+        elif not is_supported_node_type(node.type_id, s):
+            unsupported.append(
+                f"unsupported node type: {node.type_id!r}"
+            )
+
+    # 检查 edges
+    for edge in graph.edges:
+        if is_reserved_edge_type(edge.type_id, s):
+            unsupported.append(
+                f"reserved edge type: {edge.type_id!r}"
+            )
+        elif not is_supported_edge_type(edge.type_id, s):
+            unsupported.append(
+                f"unsupported edge type: {edge.type_id!r}"
+            )
+
+    # 计算 supported count
+    supported_count = len(graph.nodes) + len(graph.edges) - len(unsupported)
+
+    return RoundTripReport(
+        source_type="visual",
+        target_type="visual",
+        type_count_before=len(graph.nodes) + len(graph.edges),
+        type_count_after=supported_count,
+        is_equivalent=len(unsupported) == 0,
+        differences=[],
+        unsupported_elements=unsupported,
+        surface=s,
     )
 
 

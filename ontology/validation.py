@@ -1,16 +1,18 @@
 """Ontology Validation — 一致性校验。
 
 N1.5 — Ontology Platform Architecture & Visual Authoring Foundation
+N1.6 — Ontology Studio Contract Closure
 
 提供比 loader 中 validate_ontology_schema 更深层的一致性校验：
 - 跨类型引用检查（subject_type / object_type 是否存在）
 - 可视化图校验（悬空边、重复节点、类型匹配）
 - 属性完整性校验
 - 必填字段检查
+- 未正式支持元素检测（N1.6：发出 error 而非 warning）
 
 与 loader 的区别：
 - loader.validate_ontology_schema：基础校验（ID 重复）
-- 本模块：深度校验（引用、图结构、属性）
+- 本模块：深度校验（引用、图结构、属性、supported surface）
 """
 
 from __future__ import annotations
@@ -19,6 +21,14 @@ from dataclasses import dataclass, field
 
 from ontology.catalog import OntologyCatalog
 from ontology.schema import OntologySchema
+from ontology.studio_loader import (
+    get_supported_surface,
+    is_reserved_edge_type,
+    is_reserved_node_type,
+    is_supported_edge_type,
+    is_supported_node_type,
+    SupportedSurface,
+)
 from ontology.visual_model import VisualGraph
 
 
@@ -82,14 +92,26 @@ def validate_schema_references(schema: OntologySchema) -> ValidationResult:
     )
 
 
-def validate_visual_graph(graph: VisualGraph) -> ValidationResult:
+def validate_visual_graph(
+    graph: VisualGraph,
+    surface: SupportedSurface | None = None,
+) -> ValidationResult:
     """校验可视化图结构。
 
     检查项：
     1. 节点 ID 唯一性
     2. 边引用的源/目标节点是否存在（悬空边检查）
     3. 边的源 != 目标（自环检查，仅 warn）
+    4. 未正式支持的 node/edge 类型（N1.6：error 而非 warning）
+
+    Args:
+        graph: 可视化图
+        surface: 正式支持的能力声明（默认 get_supported_surface()）
+
+    Returns:
+        ValidationResult
     """
+    s = surface or get_supported_surface()
     errors: list[str] = []
     warnings: list[str] = []
 
@@ -100,6 +122,18 @@ def validate_visual_graph(graph: VisualGraph) -> ValidationResult:
         if node.node_id in node_ids:
             errors.append(f"节点 ID {node.node_id!r} 重复")
         node_ids.add(node.node_id)
+
+        # N1.6: 检测未正式支持的节点类型
+        if is_reserved_node_type(node.type_id, s):
+            errors.append(
+                f"节点 {node.node_id!r} 使用预留类型 {node.type_id!r}"
+                "（未正式支持，请参见 Studio Contract）"
+            )
+        elif not is_supported_node_type(node.type_id, s):
+            errors.append(
+                f"节点 {node.node_id!r} 使用未知类型 {node.type_id!r}"
+                "（不在 supported surface 中）"
+            )
 
     # 检查边引用
     for edge in graph.edges:
@@ -116,6 +150,19 @@ def validate_visual_graph(graph: VisualGraph) -> ValidationResult:
         if edge.source_id == edge.target_id:
             warnings.append(
                 f"边 {edge.edge_id!r} 是自环（{edge.source_id!r}）"
+            )
+
+        # N1.6: 检测未正式支持的边类型
+        if is_reserved_edge_type(edge.type_id, s):
+            errors.append(
+                f"边 {edge.edge_id!r} 使用预留类型 {edge.type_id!r}"
+                "（未正式支持，请参见 Studio Contract）"
+            )
+        elif not is_supported_edge_type(edge.type_id, s):
+            # 未知的边类型（既不是 supported 也不是 reserved）发出 warning
+            warnings.append(
+                f"边 {edge.edge_id!r} 使用未知类型 {edge.type_id!r}"
+                "（不在 supported surface 中）"
             )
 
     return ValidationResult(

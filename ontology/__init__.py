@@ -144,10 +144,25 @@ from ontology.validation import (
 
 from ontology.roundtrip import (
     RoundTripReport,
+    RoundTripUnsupportedError,
     visual_graph_to_schema,
     schema_to_visual_graph,
     yaml_config_to_visual_graph,
     verify_schema_roundtrip,
+    verify_roundtrip_with_surface,
+)
+
+# N1.6 — Studio Loader
+from ontology.studio_loader import (
+    StudioLoadError,
+    StudioManifestResult,
+    SupportedSurface,
+    get_supported_surface,
+    load_studio_manifest,
+    is_supported_node_type,
+    is_reserved_node_type,
+    is_supported_edge_type,
+    is_reserved_edge_type,
 )
 
 
@@ -239,8 +254,20 @@ __all__ = [
     "validate_full_ontology",
     # N1.5 — Round-Trip
     "RoundTripReport",
+    "RoundTripUnsupportedError",
     "visual_graph_to_schema",
     "schema_to_visual_graph",
     "yaml_config_to_visual_graph",
     "verify_schema_roundtrip",
+    "verify_roundtrip_with_surface",
+    # N1.6 — Studio Loader
+    "StudioLoadError",
+    "StudioManifestResult",
+    "SupportedSurface",
+    "get_supported_surface",
+    "load_studio_manifest",
+    "is_supported_node_type",
+    "is_reserved_node_type",
+    "is_supported_edge_type",
+    "is_reserved_edge_type",
 ]
