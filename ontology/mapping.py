@@ -1,13 +1,16 @@
 """事件映射器。
 
 N2 — Ontology Governance Loop
+N2.1 — RuntimePackage-Driven Governance Realignment
 
 把 raw runtime event 映射为：
 - EventInstance
 - EntityInstance
 - ContextSnapshot
 
-只做最小映射，不要求覆盖所有 runtime。
+N2.1 新增：
+- map_raw_event_with_package() Package-driven 映射
+- Schema 驱动的 event_type 识别
 """
 
 from __future__ import annotations
@@ -15,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from ontology.authoring_package import RuntimePackage
 from ontology.schema import OntologySchema, EventType
 from ontology.instances import (
     EntityInstance,
@@ -197,4 +201,154 @@ def _build_context_snapshot(
     return build_context_snapshot(
         context_type="session-context",
         snapshot=context_data,
+    )
+
+
+# ─── N2.1 Package-Driven Mapping ───
+
+
+def map_raw_event_with_package(
+    raw_event: dict[str, Any],
+    runtime_package: RuntimePackage,
+) -> EventMappingResult:
+    """Package-driven 事件映射（N2.1 正式入口）。
+
+    Schema 驱动的 event_type 识别：
+    1. 从 runtime_package.ontology_schema.event_types 动态匹配
+    2. Fallback 到默认映射表
+
+    Args:
+        raw_event: 原始运行时事件
+        runtime_package: 编译后的运行时包
+
+    Returns:
+        EventMappingResult
+    """
+    ontology_schema = runtime_package.ontology_schema
+
+    # Schema-driven 识别 event_type
+    event_type_id = _schema_driven_detect_event_type(raw_event, ontology_schema)
+
+    event_type = ontology_schema.get_event_type(event_type_id)
+    if event_type is None:
+        # Fallback 到默认 tool-invocation
+        event_type_id = "tool-invocation"
+        event_type = ontology_schema.get_event_type(event_type_id)
+        if event_type is None:
+            # 创建默认 EventType（当 schema 为空时）
+            event_type = EventType(
+                id="tool-invocation",
+                name="Tool Invocation",
+                description="默认工具调用事件",
+                subject_type="agent-role",
+                properties=["tool_name", "tool_args"],
+            )
+
+    # 构建主体 EntityInstance（Schema-driven）
+    subject_entity = _schema_driven_build_subject_entity(raw_event, event_type)
+
+    # 构建 EventInstance
+    event_data = _extract_event_data(raw_event, event_type)
+    event_instance = build_event_instance(
+        event_type=event_type_id,
+        subject_instance_id=subject_entity.instance_id,
+        event_data=event_data,
+        object_instance_id=None,
+    )
+
+    # 构建 ContextSnapshot
+    context_snapshot = _build_context_snapshot(raw_event)
+
+    return EventMappingResult(
+        event_instance=event_instance,
+        entity_instances=[subject_entity],
+        context_snapshot=context_snapshot,
+    )
+
+
+def _schema_driven_detect_event_type(
+    raw_event: dict[str, Any],
+    ontology_schema: OntologySchema,
+) -> str:
+    """Schema-driven 检测 event_type。
+
+    从 ontology_schema.event_types 动态匹配：
+    - 检查 raw_event.event 是否匹配任何 event_type.id
+    - 检查 raw_event.event 是否匹配任何 event_type.name
+    - Fallback 到默认映射表
+
+    Args:
+        raw_event: 原始事件
+        ontology_schema: Schema
+
+    Returns:
+        event_type_id
+    """
+    raw_event_type = raw_event.get("event", "unknown")
+
+    # 1. 检查是否直接匹配 event_type.id
+    for et in ontology_schema.event_types:
+        if et.id == raw_event_type:
+            return et.id
+        # 检查去除前缀的匹配（如 "tool-invocation" 匹配 "event-tool-invocation"）
+        if f"event-{et.id}" == raw_event_type:
+            return et.id
+
+    # 2. 检查是否匹配 event_type.name
+    for et in ontology_schema.event_types:
+        if et.name.lower().replace(" ", "-") == raw_event_type.lower():
+            return et.id
+
+    # 3. Fallback 到默认映射表
+    fallback_mapping = {
+        "pre_tool_use": "tool-invocation",
+        "post_tool_use": "tool-invocation",
+        "task_assignment": "task-assignment",
+        "review_request": "review-request",
+    }
+
+    return fallback_mapping.get(raw_event_type, "tool-invocation")
+
+
+def _schema_driven_build_subject_entity(
+    raw_event: dict[str, Any],
+    event_type: EventType,
+) -> EntityInstance:
+    """Schema-driven 构建主体 EntityInstance。
+
+    从 event_type.subject_type 推导 entity_type。
+    从 payload 提取属性（基于 event_type.properties）。
+
+    Args:
+        raw_event: 原始事件
+        event_type: 事件类型定义
+
+    Returns:
+        EntityInstance
+    """
+    payload = raw_event.get("payload", {})
+
+    # 从 subject_type 推导 entity_type
+    entity_type = event_type.subject_type
+
+    # 提取主体名称
+    subject_name = payload.get("assignee", payload.get("agent", payload.get("user", "unknown")))
+
+    # 根据 event_type.properties 提取属性
+    properties: dict[str, Any] = {}
+    for prop_name in event_type.properties:
+        if prop_name in payload:
+            properties[prop_name] = payload[prop_name]
+
+    # 补充额外属性
+    if "capabilities" in payload:
+        properties["capabilities"] = payload["capabilities"]
+    if "permissions" in payload:
+        properties["permissions"] = payload["permissions"]
+
+    return build_entity_instance(
+        entity_type=entity_type,
+        name=subject_name,
+        properties=properties,
+        source="runtime",
     )
